@@ -167,12 +167,12 @@ fi
 
 # Okay... Everything looks good.  Setup the configuration
 
-install -C "${configpath}/Make.defs" "${TOPDIR}/." || \
+install "${configpath}/Make.defs" "${TOPDIR}/." || \
   { echo "Failed to copy ${configpath}/Make.defs" ; exit 7 ; }
-install -C "${configpath}/setenv.sh" "${TOPDIR}/." || \
+install "${configpath}/setenv.sh" "${TOPDIR}/." || \
   { echo "Failed to copy ${configpath}/setenv.sh" ; exit 8 ; }
 chmod 755 "${TOPDIR}/setenv.sh"
-install -C "${configpath}/defconfig" "${TOPDIR}/.configX" || \
+install "${configpath}/defconfig" "${TOPDIR}/.configX" || \
   { echo "Failed to copy ${configpath}/defconfig" ; exit 9 ; }
 
 # If we did not use the CONFIG_APPS_DIR that was in the defconfig config file,
@@ -195,7 +195,7 @@ if [ ! -z "${appdir}" -a "X${newconfig}" != "Xy" ]; then
   if [ ! -r "${configpath}/appconfig" ]; then
     echo "NOTE: No readable appconfig file found in ${configpath}"
   else
-    install -C "${configpath}/appconfig" "${TOPDIR}/${appdir}/.config" || \
+    install "${configpath}/appconfig" "${TOPDIR}/${appdir}/.config" || \
       { echo "Failed to copy ${configpath}/appconfig" ; exit 10 ; }
   fi
 fi
@@ -203,6 +203,6 @@ fi
 # install the final .configX only if it differs from any existing
 # .config file.
 
-install -C "${TOPDIR}/.configX" "${TOPDIR}/.config"
+install "${TOPDIR}/.configX" "${TOPDIR}/.config"
 rm -f "${TOPDIR}/.configX"
 
