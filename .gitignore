@@ -1,0 +1,13 @@
+*.o
+*.exe
+*.a
+.built
+.depend
+*.dep
+.config
+.context
+nuttx-6.22/nuttx
+*.hex
+*.bin
+namedapp_list.h
+namedapp_proto.h
