@@ -267,6 +267,8 @@ int nximage_main(int argc, char *argv[])
 
   nximage_image(g_nximage.hbkgd);
 
+  sleep(5);
+
   /* Release background */
 
   (void)nx_releasebkgd(g_nximage.hbkgd);
