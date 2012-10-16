@@ -625,6 +625,9 @@ static void max11802_worker(FAR void *arg)
 		max11802_sendcmd(priv, MAX11802_CMD_YPOSITION, &tags);
 	  } while (tags == 0xFFFF);
 	  
+      /* Continue to sample the position while the pen is down */
+      wd_start(priv->wdog, MAX11802_WDOG_DELAY, max11802_wdog, 1, (uint32_t)priv);
+	  
 	  if ((tags & 0x03) != 0)
 		goto ignored; /* Touch has ended before we measured */
 	
@@ -645,10 +648,6 @@ static void max11802_worker(FAR void *arg)
 
       xdiff = x > priv->threshx ? (x - priv->threshx) : (priv->threshx - x);
       ydiff = y > priv->threshy ? (y - priv->threshy) : (priv->threshy - y);
-
-      /* Continue to sample the position while the pen is down */
-
-      wd_start(priv->wdog, MAX11802_WDOG_DELAY, max11802_wdog, 1, (uint32_t)priv);
 
       /* Check the thresholds.  Bail if there is no significant difference */
 
