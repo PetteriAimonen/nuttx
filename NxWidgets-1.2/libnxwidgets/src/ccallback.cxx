@@ -226,6 +226,8 @@ void CCallback::newKeyboardEvent(NXHANDLE hwnd, uint8_t nCh,
     }
 }
 
+#endif // CONFIG_NX_KBD
+
 /**
  * This callback is the response from nx_block (or nxtk_block). Those
  * blocking interfaces are used to assure that no further messages are
@@ -248,7 +250,7 @@ void CCallback::newKeyboardEvent(NXHANDLE hwnd, uint8_t nCh,
 #ifdef CONFIG_NX_MULTIUSER
 void CCallback::windowBlocked(NXWINDOW hwnd, FAR void *arg1, FAR void *arg2)
 {
-  gvdbg("hwnd=%p arg1=%p arg2=%p\n", hwnd, arg1, arg2);
+  gdbg("hwnd=%p arg1=%p arg2=%p\n", hwnd, arg1, arg2);
 
   // The first argument must be the CCallback instance
 
@@ -260,4 +262,3 @@ void CCallback::windowBlocked(NXWINDOW hwnd, FAR void *arg1, FAR void *arg2)
 }
 #endif
 
-#endif // CONFIG_NX_KBD
