@@ -303,7 +303,7 @@ static void max11802_notify(FAR struct max11802_dev_s *priv)
 
   if (priv->nwaiters > 0)
     {
-      /* After posting this semaphore, we need to exit because the MAX11802
+      /* After posting this semaphore, we need to exit because the sample
        * is no longer available.
        */
 
@@ -340,7 +340,7 @@ static int max11802_sample(FAR struct max11802_dev_s *priv,
   irqstate_t flags;
   int ret = -EAGAIN;
 
-  /* Interrupts me be disabled when this is called to (1) prevent posting
+  /* Interrupts must be disabled when this is called to (1) prevent posting
    * of semaphores from interrupt handlers, and (2) to prevent sampled data
    * from changing until it has been reported.
    */
@@ -394,7 +394,7 @@ static int max11802_waitsample(FAR struct max11802_dev_s *priv,
   irqstate_t flags;
   int ret;
 
-  /* Interrupts me be disabled when this is called to (1) prevent posting
+  /* Interrupts must be disabled when this is called to (1) prevent posting
    * of semaphores from interrupt handlers, and (2) to prevent sampled data
    * from changing until it has been reported.
    *
@@ -532,7 +532,7 @@ static void max11802_worker(FAR void *arg)
   uint16_t                      ydiff;
   bool                          pendown;
   int                           ret;
-  int							tags;
+  int                           tags, tags2;
 
   ASSERT(priv != NULL);
 
@@ -576,6 +576,11 @@ static void max11802_worker(FAR void *arg)
 
   /* Handle the change from pen down to pen up */
 
+  if (pendown)
+    ivdbg("\nPD\n");
+  else
+    ivdbg("\nPU\n");
+  
   if (!pendown)
     {
       /* The pen is up.. reset thresholding variables. */
@@ -587,6 +592,8 @@ static void max11802_worker(FAR void *arg)
        * and already reported; CONTACT_UP == pen up, but not reported)
        */
 
+      ivdbg("\nPC%d\n", priv->sample.contact);
+      
       if (priv->sample.contact == CONTACT_NONE ||
           priv->sample.contact == CONTACT_UP)
 
@@ -615,32 +622,36 @@ static void max11802_worker(FAR void *arg)
        * later.
        */
 
+       ivdbg("Previous pen up event still in buffer\n");
+       max11802_notify(priv);
        wd_start(priv->wdog, MAX11802_WDOG_DELAY, max11802_wdog, 1, (uint32_t)priv);
        goto ignored;
     }
   else
     {
-	  /* Wait for data ready */
-	  do {
-		max11802_sendcmd(priv, MAX11802_CMD_YPOSITION, &tags);
-	  } while (tags == 0xFFFF);
-	  
-      /* Continue to sample the position while the pen is down */
-      wd_start(priv->wdog, MAX11802_WDOG_DELAY, max11802_wdog, 1, (uint32_t)priv);
-	  
-	  if ((tags & 0x03) != 0)
-		goto ignored; /* Touch has ended before we measured */
-	
-      /* Handle pen down events.  First, sample positional values. */
+      /* Wait for data ready */
+      do {
+        /* Handle pen down events.  First, sample positional values. */
       
 #ifdef CONFIG_MAX11802_SWAPXY
-      x = max11802_sendcmd(priv, MAX11802_CMD_YPOSITION, &tags);
-      y = max11802_sendcmd(priv, MAX11802_CMD_XPOSITION, &tags);
+        x = max11802_sendcmd(priv, MAX11802_CMD_YPOSITION, &tags);
+        y = max11802_sendcmd(priv, MAX11802_CMD_XPOSITION, &tags2);
 #else
-      x = max11802_sendcmd(priv, MAX11802_CMD_XPOSITION, &tags);
-      y = max11802_sendcmd(priv, MAX11802_CMD_YPOSITION, &tags);
+        x = max11802_sendcmd(priv, MAX11802_CMD_XPOSITION, &tags);
+        y = max11802_sendcmd(priv, MAX11802_CMD_YPOSITION, &tags2);
 #endif
+      } while (tags == 0xF || tags2 == 0xF);
 
+      /* Continue to sample the position while the pen is down */
+      wd_start(priv->wdog, MAX11802_WDOG_DELAY, max11802_wdog, 1, (uint32_t)priv);
+      
+      /* Check if data is valid */
+      if ((tags & 0x03) != 0)
+      {
+        ivdbg("Touch ended before measurement\n");
+        goto ignored;
+      }
+      
       /* Perform a thresholding operation so that the results will be more stable.
        * If the difference from the last sample is small, then ignore the event.
        * REVISIT:  Should a large change in pressure also generate a event?
@@ -1230,6 +1241,16 @@ int max11802_register(FAR struct spi_dev_s *spi,
   (void)SPI_SEND(priv->spi, MAX11802_AVG);
   SPI_SELECT(priv->spi, SPIDEV_TOUCHSCREEN, false);
 
+  SPI_SELECT(priv->spi, SPIDEV_TOUCHSCREEN, true);
+  (void)SPI_SEND(priv->spi, MAX11802_CMD_TIMING_WR);
+  (void)SPI_SEND(priv->spi, MAX11802_TIMING);
+  SPI_SELECT(priv->spi, SPIDEV_TOUCHSCREEN, false);
+  
+  SPI_SELECT(priv->spi, SPIDEV_TOUCHSCREEN, true);
+  (void)SPI_SEND(priv->spi, MAX11802_CMD_DELAY_WR);
+  (void)SPI_SEND(priv->spi, MAX11802_DELAY);
+  SPI_SELECT(priv->spi, SPIDEV_TOUCHSCREEN, false);
+  
   /* Test that the device access was successful. */
   SPI_SELECT(priv->spi, SPIDEV_TOUCHSCREEN, true);
   (void)SPI_SEND(priv->spi, MAX11802_CMD_MODE_RD);
