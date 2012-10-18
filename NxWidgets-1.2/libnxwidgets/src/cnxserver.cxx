@@ -225,7 +225,7 @@ bool CNxServer::connect(void)
 
   // Wait a bit to let the server get started
 
-  sleep(1);
+  usleep(100);
 
   // Connect to the server
 
