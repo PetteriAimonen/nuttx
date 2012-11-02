@@ -41,6 +41,9 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
+#include <stdint.h>
+
 /****************************************************************************
  * Pre-Processor Definitions
  ****************************************************************************/
@@ -99,6 +102,24 @@
 #define RGB16TO24(rgb16) \
   (((rgb16 & 0xf800) << 8) | ((rgb16 & 0x07e0) << 5)  | ((rgb16 & 0x001f) << 3))
 
+/* Define a macro to convert to the configured NX color depth. */
+
+#if CONFIG_NXWIDGETS_BPP == 24 || CONFIG_NXWIDGETS_BPP == 32
+typedef uint32_t nxcolor_t;
+#  define RGBTONX(r,g,b) RGBTO24(r,g,b)
+#elif CONFIG_NXWIDGETS_BPP == 16
+typedef uint16_t nxcolor_t;
+#  define RGBTONX(r,g,b) RGBTO16(r,g,b)
+#elif CONFIG_NXWIDGETS_BPP == 8 && !defined(CONFIG_NXWIDGETS_GREYSCALE)
+typedef uint8_t nxcolor_t;
+#  define RGBTONX(r,g,b) RGBTO8(r,g,b)
+#elif CONFIG_NXWIDGETS_BPP == 8 && defined(CONFIG_NXWIDGETS_GREYSCALE)
+typedef uint8_t nxcolor_t;
+#  define RGBTONX(r,g,b) (((r)+(g)+(b)) / 3)
+#else
+/* Signal unsupported pixel format by leaving RGBTONX undefined */
+#endif
+  
 /* Standard Color Definitions ***********************************************/
 /* RGB24-888: 00000000 RRRRRRRR GGGGGGGG BBBBBBBB */
 
