@@ -1101,12 +1101,6 @@ bool CTaskbar::redrawTaskbarWindow(void)
       port->drawFilledRect(0, 0, windowSize.w, windowSize.h,
                            CONFIG_NXWM_DEFAULT_BACKGROUNDCOLOR);
 
-      // Add a border to the task bar to delineate it from the background window
-
-      port->drawBevelledRect(0, 0,  windowSize.w, windowSize.h,
-                             CONFIG_NXWM_DEFAULT_SHINEEDGECOLOR,
-                             CONFIG_NXWM_DEFAULT_SHADOWEDGECOLOR);
-
       // Begin adding icons in the upper left corner
 
       struct nxgl_point_s taskbarPos;
@@ -1300,12 +1294,6 @@ bool CTaskbar::redrawBackgroundWindow(void)
 
   port->drawFilledRect(0, 0, windowSize.w, windowSize.h,
                        CONFIG_NXWM_DEFAULT_BACKGROUNDCOLOR);
-
-  // Add a border to the task bar to delineate it from the task bar
-
-  port->drawBevelledRect(0, 0,  windowSize.w, windowSize.h,
-                         CONFIG_NXWM_DEFAULT_SHINEEDGECOLOR,
-                         CONFIG_NXWM_DEFAULT_SHADOWEDGECOLOR);
 
   // Then re-draw the background image on the window
 
