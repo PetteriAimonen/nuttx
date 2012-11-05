@@ -1131,6 +1131,10 @@ bool CTaskbar::redrawTaskbarWindow(void)
           image->disableDrawing();
           image->setRaisesEvents(false);
 
+          // Hilight the icon for the topmost window
+          
+          image->highlight(m_slots.at(i).app == m_topApp);
+          
           // Get the size of the icon image
 
           NXWidgets::CRect rect;
@@ -1337,6 +1341,9 @@ bool CTaskbar::redrawApplicationWindow(IApplication *app)
 
   raiseTopApplication();
 
+  // Redraw taskbar
+  redrawTaskbarWindow();
+  
   // Every application provides a method to obtain its application window
 
   IApplicationWindow *appWindow = app->getWindow();
