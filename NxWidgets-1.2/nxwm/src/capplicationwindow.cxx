@@ -241,6 +241,7 @@ bool CApplicationWindow::open(void)
       m_stopImage->addWidgetEventHandler(this);
     }
 
+#ifndef CONFIG_NXWM_DISABLE_MINIMIZE
   // Create MINIMIZE application bitmap container
 
   m_minimizeBitmap = new NXWidgets::CRlePaletteBitmap(&g_minimizeBitmap);
@@ -289,7 +290,7 @@ bool CApplicationWindow::open(void)
 
   m_minimizeImage->setBorderless(true);
   m_minimizeImage->addWidgetEventHandler(this);
-
+#endif
   // The rest of the toolbar will hold the left-justified application label
   // Create the default font instance
 
@@ -366,10 +367,13 @@ void CApplicationWindow::redraw(void)
 
   // Draw the minimize image
 
-  m_minimizeImage->enableDrawing();
-  m_minimizeImage->redraw();
-  m_minimizeImage->setRaisesEvents(true);
-
+  if (m_minimizeImage)
+    {
+      m_minimizeImage->enableDrawing();
+      m_minimizeImage->redraw();
+      m_minimizeImage->setRaisesEvents(true);
+    }
+      
   // And finally draw the window label
 
   m_windowLabel->enableDrawing();
@@ -393,10 +397,12 @@ void CApplicationWindow::hide(void)
     }
 
   // Disable the minimize image
-
-  m_minimizeImage->disableDrawing();
-  m_minimizeImage->setRaisesEvents(false);
-
+  if (m_minimizeImage)
+  {
+    m_minimizeImage->disableDrawing();
+    m_minimizeImage->setRaisesEvents(false);
+  }
+    
   // Disable the window label
 
   m_windowLabel->disableDrawing();
@@ -570,7 +576,7 @@ void CApplicationWindow::handleActionEvent(const NXWidgets::CWidgetEventArgs &e)
 
       // Check the minimize image (only if the stop application image is not pressed)
 
-      else if (m_minimizeImage->isClicked())
+      else if (m_minimizeImage && m_minimizeImage->isClicked())
         {
           // Notify the controlling logic that the application should be miminsed
 
