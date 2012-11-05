@@ -17,7 +17,7 @@ def get_palette(img, maxcolors = 255):
   return [c[1] for c in colors[:maxcolors]]
 
 def write_palette(outfile, palette):
-  '''Write the palette in all the color formats to the output file.'''
+  '''Write the palette (normal and hilight) to the output file.'''
   
   outfile.write('static const nxcolor_t palette[BITMAP_PALETTESIZE] =\n');
   outfile.write('{\n')
@@ -29,6 +29,21 @@ def write_palette(outfile, palette):
     outfile.write('\n');
   
   outfile.write('};\n\n')
+  
+  outfile.write('static const nxcolor_t hilight_palette[BITMAP_PALETTESIZE] =\n');
+  outfile.write('{\n')
+  
+  for i in range(0, len(palette), 4):
+    outfile.write('  ');
+    for r, g, b in palette[i:i+4]:
+      r = min(255, r + 50)
+      g = min(255, g + 50)
+      b = min(255, b + 50)
+      outfile.write('RGBTONX(%3d,%3d,%3d), ' % (r, g, b))
+    outfile.write('\n');
+  
+  outfile.write('};\n\n')
+  
 
 def quantize(color, palette):
   '''Return the color index to closest match in the palette.'''
@@ -87,14 +102,14 @@ def write_image(outfile, img, palette):
 def write_descriptor(outfile, name):
   '''Write the public descriptor structure for the image.'''
   
-  outfile.write('extern const struct NXWidgets::SRlePaletteBitmap g_bitmap_%s =\n' % name)
+  outfile.write('extern const struct NXWidgets::SRlePaletteBitmap g_%s =\n' % name)
   outfile.write('{\n')
   outfile.write('  CONFIG_NXWIDGETS_BPP,\n')
   outfile.write('  CONFIG_NXWIDGETS_FMT,\n')
   outfile.write('  BITMAP_PALETTESIZE,\n')
   outfile.write('  BITMAP_WIDTH,\n')
   outfile.write('  BITMAP_HEIGHT,\n')
-  outfile.write('  {palette},\n')
+  outfile.write('  {palette, hilight_palette},\n')
   outfile.write('  bitmap\n')
   outfile.write('};\n')
   
