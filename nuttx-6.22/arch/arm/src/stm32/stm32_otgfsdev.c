@@ -3986,7 +3986,7 @@ static int stm32_ep_disable(FAR struct usbdev_ep_s *ep)
       return -EINVAL;
     }
 #endif
-  usbtrace(TRACE_EPDISABLE, privep->epphy);
+  /* stm32_ep*_disable() will do the TRACE_EPDISABLE. */
 
   /* Is this an IN or an OUT endpoint */
 
