@@ -3912,6 +3912,15 @@ static void stm32_epin_disable(FAR struct stm32_ep_s *privep)
 
   usbtrace(TRACE_EPDISABLE, privep->epphy);
 
+  /* After USB reset, the endpoint will already be deactivated by the
+   * hardware. Trying to disable again will just hang in the wait. */
+  regaddr = STM32_OTGFS_DIEPCTL(privep->epphy);
+  regval  = stm32_getreg(regaddr);
+  if ((regval & OTGFS_DIEPCTL_USBAEP) == 0)
+    {
+      return;
+    }
+  
   /* Make sure that there is no pending IPEPNE interrupt (because we are
    * to poll this bit below).
    */
