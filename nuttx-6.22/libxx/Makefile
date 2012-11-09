@@ -40,7 +40,8 @@ AOBJS		= $(ASRCS:.S=$(OBJEXT))
 CSRCS		= 
 COBJS		= $(CSRCS:.c=$(OBJEXT))
 CXXSRCS		= libxx_cxapurevirtual.cxx libxx_delete.cxx libxx_deletea.cxx \
-			  libxx_eabi_atexit.cxx libxx_new.cxx libxx_newa.cxx 
+			  libxx_eabi_atexit.cxx libxx_new.cxx libxx_newa.cxx \
+			  libxx_stdthrow.cxx
 CXXOBJS		= $(CXXSRCS:.cxx=$(OBJEXT))
 
 SRCS		= $(ASRCS) $(CSRCS) $(CXXSRCS)
