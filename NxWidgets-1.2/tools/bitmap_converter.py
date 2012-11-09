@@ -19,18 +19,18 @@ def get_palette(img, maxcolors = 255):
 def write_palette(outfile, palette):
   '''Write the palette (normal and hilight) to the output file.'''
   
-  outfile.write('static const nxcolor_t palette[BITMAP_PALETTESIZE] =\n');
+  outfile.write('static const NXWidgets::nxwidget_pixel_t palette[BITMAP_PALETTESIZE] =\n');
   outfile.write('{\n')
   
   for i in range(0, len(palette), 4):
     outfile.write('  ');
     for r, g, b in palette[i:i+4]:
-      outfile.write('RGBTONX(%3d,%3d,%3d), ' % (r, g, b))
+      outfile.write('MKRGB(%3d,%3d,%3d), ' % (r, g, b))
     outfile.write('\n');
   
   outfile.write('};\n\n')
   
-  outfile.write('static const nxcolor_t hilight_palette[BITMAP_PALETTESIZE] =\n');
+  outfile.write('static const NXWidgets::nxwidget_pixel_t hilight_palette[BITMAP_PALETTESIZE] =\n');
   outfile.write('{\n')
   
   for i in range(0, len(palette), 4):
@@ -39,7 +39,7 @@ def write_palette(outfile, palette):
       r = min(255, r + 50)
       g = min(255, g + 50)
       b = min(255, b + 50)
-      outfile.write('RGBTONX(%3d,%3d,%3d), ' % (r, g, b))
+      outfile.write('MKRGB(%3d,%3d,%3d), ' % (r, g, b))
     outfile.write('\n');
   
   outfile.write('};\n\n')
@@ -130,7 +130,7 @@ if __name__ == '__main__':
 /* Automatically NuttX bitmap file. */
 /* Generated from %(src)s by bitmap_converter.py. */
 
-#include <nuttx/rgbcolors.h>
+#include <nxconfig.hxx>
 #include <crlepalettebitmap.hxx>
 
 #define BITMAP_WIDTH %(width)s
