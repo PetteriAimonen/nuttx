@@ -145,9 +145,9 @@ const struct SBitmap NXWidgets::g_cycle =
 {
   CONFIG_NXWIDGETS_BPP,              // bpp    - Bits per pixel
   COLOR_FMT,                         // fmt    - Color format
-  7,                                 // width  - Width in pixels
+  8,                                 // width  - Width in pixels
   10,                                // height - Height in rows
-  (7*CONFIG_NXWIDGETS_BPP + 7) / 8,  // stride - Width in bytes
+  (8*CONFIG_NXWIDGETS_BPP + 7) / 8,  // stride - Width in bytes
   g_cycleGlyph                       // data   - Pointer to the beginning of pixel data
 };
 
