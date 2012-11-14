@@ -65,6 +65,7 @@
 static struct nxgl_point_s g_mpos;
 static struct nxgl_point_s g_mrange;
 static uint8_t             g_mbutton;
+static struct nxbe_window_s *g_mwnd;
 
 /****************************************************************************
  * Public Data
@@ -148,6 +149,7 @@ int nx_mousein(NXHANDLE handle, nxgl_coord_t x, nxgl_coord_t y, uint8_t buttons)
 {
   FAR struct nxfe_state_s *fe = (FAR struct nxfe_state_s *)handle;
   struct nxbe_window_s *wnd;
+  uint8_t oldbuttons;
   int ret;
 
   /* Clip x and y to within the bounding rectangle */
@@ -176,10 +178,23 @@ int nx_mousein(NXHANDLE handle, nxgl_coord_t x, nxgl_coord_t y, uint8_t buttons)
     {
       /* Update the mouse value */
 
+      oldbuttons = g_mbutton;
       g_mpos.x  = x;
       g_mpos.y  = y;
       g_mbutton = buttons;
 
+      /* If a button is already down, regard this as part of a mouse
+       * drag event. Pass all the following events to the window where
+       * the drag started in.
+       */
+      if (oldbuttons && g_mwnd && g_mwnd->cb->mousein)
+        {
+          struct nxgl_point_s relpos;
+          nxgl_vectsubtract(&relpos, &g_mpos, &g_mwnd->bounds.pt1);
+          g_mwnd->cb->mousein((NXWINDOW)g_mwnd, &relpos, g_mbutton, g_mwnd->arg);
+          return OK;
+        }
+      
       /* Pick the window to receive the mouse event.  Start with
        * the top window and go down.  Step with the first window
        * that gets the mouse report
@@ -193,6 +208,8 @@ int nx_mousein(NXHANDLE handle, nxgl_coord_t x, nxgl_coord_t y, uint8_t buttons)
               break;
             }
         }
+      
+      g_mwnd = wnd;
     }
   return OK;
 }

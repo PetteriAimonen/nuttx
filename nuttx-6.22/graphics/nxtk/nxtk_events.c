@@ -225,7 +225,7 @@ static void nxtk_mousein(NXWINDOW hwnd, FAR const struct nxgl_point_s *pos,
   FAR struct nxtk_framedwindow_s *fwnd = (FAR struct nxtk_framedwindow_s *)hwnd;
   struct nxgl_point_s abspos;
   struct nxgl_point_s relpos;
-
+  
   /* Raise the window to the top if any mouse button was pressed or if auto-raise
    * is configured.  Do this before reporting the mouse event (because processing
    * of the mouse event could change the ordering again).
@@ -261,9 +261,18 @@ static void nxtk_mousein(NXWINDOW hwnd, FAR const struct nxgl_point_s *pos,
 
   nxgl_vectoradd(&abspos, pos, &fwnd->wnd.bounds.pt1);
 
+  /* In order to deliver mouse release events to the same window where the
+   * mouse down event happened, we store the initial mouse down location.
+   */
+  if (fwnd->mbutton == 0 && buttons != 0)
+  {
+    fwnd->mpos = abspos;
+  }
+  fwnd->mbutton = buttons;
+  
   /* Is the mouse position inside of the client window region? */
 
-  if (fwnd->fwcb->mousein && nxgl_rectinside(&fwnd->fwrect, &abspos))
+  if (fwnd->fwcb->mousein && nxgl_rectinside(&fwnd->fwrect, &fwnd->mpos))
     {
       nxgl_vectsubtract(&relpos, &abspos, &fwnd->fwrect.pt1);
       fwnd->fwcb->mousein((NXTKWINDOW)fwnd, &relpos, buttons, fwnd->fwarg);
@@ -271,7 +280,7 @@ static void nxtk_mousein(NXWINDOW hwnd, FAR const struct nxgl_point_s *pos,
 
   /* If the mouse position inside the toobar region? */
 
-  else if (fwnd->tbcb->mousein && nxgl_rectinside(&fwnd->tbrect, &abspos))
+  else if (fwnd->tbcb->mousein && nxgl_rectinside(&fwnd->tbrect, &fwnd->mpos))
     {
       nxgl_vectsubtract(&relpos, &abspos, &fwnd->tbrect.pt1);
       fwnd->tbcb->mousein((NXTKWINDOW)fwnd, &relpos, buttons, fwnd->tbarg);
