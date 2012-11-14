@@ -654,7 +654,7 @@ bool CTaskbar::stopApplication(IApplication *app)
         {
           // Yes.. found it.  Delete the icon image and remove the entry
           // from the list of applications
-
+          delete m_slots.at(i).image->getBitmap();
           delete m_slots.at(i).image;
           m_slots.erase(i);
           break;

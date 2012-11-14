@@ -101,6 +101,8 @@ CNxTkWindow::~CNxTkWindow(void)
   // constructed-us.
 
   (void)nxtk_closewindow(m_hNxTkWindow);
+  
+  delete m_widgetControl;
 }
 
 /**
