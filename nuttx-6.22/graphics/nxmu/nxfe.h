@@ -392,6 +392,7 @@ struct nxsvrmsg_getrectangle_s
   unsigned int plane;              /* The plane number to read */
   FAR uint8_t *dest;               /* Memory location in which to store the graphics data */
   unsigned int deststride;         /* Width of the destination memory in bytes */
+  sem_t *sem_done;                    /* Semaphore to report when command is done. */
 };
 
 /* Fill a trapezoidal region in the window with a color */
@@ -425,6 +426,7 @@ struct nxsvrmsg_bitmap_s
   FAR const void *src[CONFIG_NX_NPLANES]; /* The start of the source image. */
   struct nxgl_point_s origin;     /* Offset into the source image data */
   unsigned int stride;            /* The width of the full source image in pixels. */
+  sem_t *sem_done;                    /* Semaphore to report when command is done. */
 };
 
 /* Set the color of the background */
