@@ -589,6 +589,25 @@ EXTERN int nxmu_sendclient(FAR struct nxfe_conn_s *conn,
                            FAR const void *msg, size_t msglen);
 
 /****************************************************************************
+ * Name: nxmu_sendclientwindow
+ *
+ * Description:
+ *  Send a message to the client at NX_CLIMSG_PRIO priority
+ *
+ * Input Parameters:
+ *   wnd    - A pointer to the back-end window structure
+ *   msg    - A pointer to the message to send
+ *   msglen - The length of the message in bytes.
+ *
+ * Return:
+ *   OK on success; ERROR on failure with errno set appropriately
+ *
+ ****************************************************************************/
+
+int nxmu_sendclientwindow(FAR struct nxbe_window_s *wnd, FAR const void *msg,
+                    size_t msglen);
+
+/****************************************************************************
  * Name: nxmu_openwindow
  *
  * Description:
