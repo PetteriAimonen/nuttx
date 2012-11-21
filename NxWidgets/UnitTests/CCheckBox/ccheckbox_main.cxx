@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CLatchButton/main.cxx
+// NxWidgets/UnitTests/CCheckBox/ccheckbox_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -41,12 +41,16 @@
 
 #include <nuttx/init.h>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <debug.h>
 
 #include <nuttx/nx/nx.h>
 
-#include "clatchbuttontest.hxx"
+#include "crlepalettebitmap.hxx"
+#include "glyphs.hxx"
+#include "ccheckboxtest.hxx"
 
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -60,7 +64,8 @@
 // Private Data
 /////////////////////////////////////////////////////////////////////////////
 
-static const char g_pushme[] = "Push Me";
+static unsigned int g_mmInitial;
+static unsigned int g_mmprevious;
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Function Prototypes
@@ -68,34 +73,58 @@ static const char g_pushme[] = "Push Me";
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int ccheckbox_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Functions
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// Name: showButtonState
+// Name: updateMemoryUsage
 /////////////////////////////////////////////////////////////////////////////
 
-static void showButtonState(CLatchButton *button, bool &clicked, bool &latched)
+static void updateMemoryUsage(unsigned int previous,
+                              FAR const char *msg)
 {
-  bool nowClicked = button->isClicked();
-  bool nowLatched = button->isLatched();
+  struct mallinfo mmcurrent;
 
-  printf(MAIN_STRING "Button state: %s and %s\n",
-    nowClicked ? "clicked" : "released",
-    nowLatched ? "latched" : "unlatched");
+  /* Get the current memory usage */
 
-  if (clicked != nowClicked || latched != nowLatched)
-    {
-      printf(MAIN_STRING "ERROR: Expected %s and %s\n",
-        clicked ? "clicked" : "released",
-        latched ? "latched" : "unlatched");
+#ifdef CONFIG_CAN_PASS_STRUCTS
+  mmcurrent = mallinfo();
+#else
+  (void)mallinfo(&mmcurrent);
+#endif
 
-      clicked = nowClicked;
-      latched = nowLatched;
-    }
+  /* Show the change from the previous time */
+
+  message("\n%s:\n", msg);
+  message("  Before: %8d After: %8d Change: %8d\n\n",
+          previous, mmcurrent.uordblks, mmcurrent.uordblks - previous);
+
+  /* Set up for the next test */
+
+  g_mmprevious = mmcurrent.uordblks;
+}
+
+/////////////////////////////////////////////////////////////////////////////
+// Name: initMemoryUsage
+/////////////////////////////////////////////////////////////////////////////
+
+static void initMemoryUsage(void)
+{
+  struct mallinfo mmcurrent;
+
+  /* Get the current memory usage */
+
+#ifdef CONFIG_CAN_PASS_STRUCTS
+  mmcurrent = mallinfo();
+#else
+  (void)mallinfo(&mmcurrent);
+#endif
+
+  g_mmInitial  = mmcurrent.uordblks;
+  g_mmprevious = mmcurrent.uordblks;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -103,97 +132,78 @@ static void showButtonState(CLatchButton *button, bool &clicked, bool &latched)
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// user_start/nxheaders_main
+// Name: nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int ccheckbox_main(int argc, char *argv[])
 {
-  // Create an instance of the font test
+  // Initialize memory monitor logic
 
-  printf(MAIN_STRING "Create CLatchButtonTest instance\n");
-  CLatchButtonTest *test = new CLatchButtonTest();
+  initMemoryUsage();
+
+  // Create an instance of the checkbox test
+
+  message("ccheckbox_main: Create CCheckBoxTest instance\n");
+  CCheckBoxTest *test = new CCheckBoxTest();
+  updateMemoryUsage(g_mmprevious, "After creating CCheckBoxTest");
 
   // Connect the NX server
 
-  printf(MAIN_STRING "Connect the CLatchButtonTest instance to the NX server\n");
+  message("ccheckbox_main: Connect the CCheckBoxTest instance to the NX server\n");
   if (!test->connect())
     {
-      printf(MAIN_STRING "Failed to connect the CLatchButtonTest instance to the NX server\n");
+      message("ccheckbox_main: Failed to connect the CCheckBoxTest instance to the NX server\n");
       delete test;
       return 1;
     }
+  updateMemoryUsage(g_mmprevious, "ccheckbox_main: After connecting to the server");
 
   // Create a window to draw into
 
-  printf(MAIN_STRING "Create a Window\n");
+  message("ccheckbox_main: Create a Window\n");
   if (!test->createWindow())
     {
-      printf(MAIN_STRING "Failed to create a window\n");
+      message("ccheckbox_main: Failed to create a window\n");
       delete test;
       return 1;
     }
+  updateMemoryUsage(g_mmprevious, "ccheckbox_main: After creating a window");
 
-  // Create a CLatchButton instance
+  // Show the initial state of the checkbox
 
-  CLatchButton *button = test->createButton(g_pushme);
-  if (!button)
-    {
-      printf(MAIN_STRING "Failed to create a button\n");
-      delete test;
-      return 1;
-    }
+  test->showCheckBox();
+  test->showCheckBoxState();
+  sleep(1);
 
-  // Show the button
+  // Now click the checkbox
 
-  printf(MAIN_STRING "Show the button\n");
-  test->showButton(button);
+  message("ccheckbox_main: Click 1\n");
+  test->clickCheckBox();
+  usleep(500*1000);
+  test->showCheckBoxState();
+  updateMemoryUsage(g_mmprevious, "After click 1");
+  usleep(500*1000);
 
-  bool clicked = false;
-  bool latched = false;
-  showButtonState(button, clicked, latched);
+  message("ccheckbox_main: Click 2\n");
+  test->clickCheckBox();
+  usleep(500*1000);
+  test->showCheckBoxState();
+  updateMemoryUsage(g_mmprevious, "After click 2");
+  usleep(500*1000);
 
-  // Toggle the button state a few times
-
-  for (int i = 0; i < 8; i++)
-    {
-      // Wait two seconds, then perform a simulated mouse click on the button
-
-      sleep(2);
-      printf(MAIN_STRING "Click the button\n");
-      test->click();
-      test->poll(button);
-
-      // Test the button state it should be clicked with the latch state
-      // toggled
-
-      clicked = true;
-      latched = !latched;
-      showButtonState(button, clicked, latched);
-
-      // And release the button after 0.5 seconds
-
-      usleep(500 * 1000);
-      printf(MAIN_STRING "Release the button\n");
-      test->release();
-      test->poll(button);
-
-      // Test the button state it should be unclicked with the latch state
-      // unchanged
-
-      clicked = false;
-      showButtonState(button, clicked, latched);
-      fflush(stdout);
-    }
-
-  // Wait a few more seconds so that the tester can ponder the result
-
-  sleep(3);
+  message("ccheckbox_main: Click 3\n");
+  test->clickCheckBox();
+  usleep(500*1000);
+  test->showCheckBoxState();
+  updateMemoryUsage(g_mmprevious, "After click 3");
+  sleep(2);
 
   // Clean up and exit
 
-  printf(MAIN_STRING "Clean-up and exit\n");
-  delete button;
+  message("ccheckbox_main: Clean-up and exit\n");
   delete test;
+  updateMemoryUsage(g_mmprevious, "After deleting the test");
+  updateMemoryUsage(g_mmInitial, "Final memory usage");
   return 0;
 }
 

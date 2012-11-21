@@ -158,4 +158,17 @@
 * nxwm/Makefile:  Fix error that creapt in during some other
   recent check-ins.
 
-1.3 2012-xx-xx Gregory Nutt <gnutt@nuttx.org>
+1.3 2012-09-29 Gregory Nutt <gnutt@nuttx.org>
+
+* UnitTests/*/main.cxx:  Change entry point name to be consistent
+  with with entry point naming conventions introduced in NuttX
+  6.22.
+* Kconfig:  Added a mconfig configuration file.  Eventually, NxWidgets
+  needs to get hooked into the NuttX mconf configuration.  Still not
+  exactly sure how to do that.
+* libnxwidgets/Makefile and NxWidgets/nxwm/Makefile:  Need updates
+  for consistency with recent changes to NuttX build system (>= 6.22)
+* Kconfig:  Add option to turn on the memory monitor feature of the
+  NxWidgets/NxWM unit tests.
+
+1.4 2012-xx-xx Gregory Nutt <gnutt@nuttx.org>

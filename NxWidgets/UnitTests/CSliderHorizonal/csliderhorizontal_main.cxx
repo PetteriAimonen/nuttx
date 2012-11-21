@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CSliderVertical/main.cxx
+// NxWidgets/UnitTests/CSliderHorizontal/csliderhorizontal_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -48,7 +48,7 @@
 
 #include <nuttx/nx/nx.h>
 
-#include "csliderverticaltest.hxx"
+#include "csliderhorizontaltest.hxx"
 
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -73,7 +73,7 @@ static unsigned int g_mmprevious;
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int csliderhorizontal_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Functions
@@ -132,10 +132,10 @@ static void initMemoryUsage(void)
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// Name: user_start/nxheaders_main
+// Name: nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int csliderhorizontal_main(int argc, char *argv[])
 {
   // Initialize memory monitor logic
 
@@ -143,50 +143,50 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Create an instance of the checkbox test
 
-  message(MAIN_STRING "Create CSliderVerticalTest instance\n");
-  CSliderVerticalTest *test = new CSliderVerticalTest();
-  updateMemoryUsage(g_mmprevious, "After creating CSliderVerticalTest");
+  message("csliderhorizontal_main: Create CSliderHorizontalTest instance\n");
+  CSliderHorizontalTest *test = new CSliderHorizontalTest();
+  updateMemoryUsage(g_mmprevious, "After creating CSliderHorizontalTest");
 
   // Connect the NX server
 
-  message(MAIN_STRING "Connect the CSliderVerticalTest instance to the NX server\n");
+  message("csliderhorizontal_main: Connect the CSliderHorizontalTest instance to the NX server\n");
   if (!test->connect())
     {
-      message(MAIN_STRING "Failed to connect the CSliderVerticalTest instance to the NX server\n");
+      message("csliderhorizontal_main: Failed to connect the CSliderHorizontalTest instance to the NX server\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After connecting to the server");
+  updateMemoryUsage(g_mmprevious, "csliderhorizontal_main: After connecting to the server");
 
   // Create a window to draw into
 
-  message(MAIN_STRING "Create a Window\n");
+  message("csliderhorizontal_main: Create a Window\n");
   if (!test->createWindow())
     {
-      message(MAIN_STRING "Failed to create a window\n");
+      message("csliderhorizontal_main: Failed to create a window\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a window");
+  updateMemoryUsage(g_mmprevious, "csliderhorizontal_main: After creating a window");
 
   // Create a slider
 
-  message(MAIN_STRING "Create a Slider\n");
-  CSliderVertical *slider = test->createSlider();
+  message("csliderhorizontal_main: Create a Slider\n");
+  CSliderHorizontal *slider = test->createSlider();
   if (!slider)
     {
-      message(MAIN_STRING "Failed to create a slider\n");
+      message("csliderhorizontal_main: Failed to create a slider\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a slider");
+  updateMemoryUsage(g_mmprevious, "csliderhorizontal_main: After creating a slider");
 
   // Set the slider minimum and maximum values
 
   slider->setMinimumValue(0);
   slider->setMaximumValue(MAX_SLIDER);
   slider->setValue(0);
-  message(MAIN_STRING "Slider range %d->%d Initial value %d\n",
+  message("csliderhorizontal_main: Slider range %d->%d Initial value %d\n",
           slider->getMinimumValue(), slider->getMaximumValue(),
           slider->getValue());
 
@@ -201,10 +201,10 @@ int MAIN_NAME(int argc, char *argv[])
     {
       slider->setValue(i);
       test->showSlider(slider);
-      message(MAIN_STRING "%d. New value %d\n", i, slider->getValue());
+      message("csliderhorizontal_main: %d. New value %d\n", i, slider->getValue());
       usleep(1000); // The simulation needs this to let the X11 event loop run
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After moving the slider up");
+  updateMemoryUsage(g_mmprevious, "csliderhorizontal_main: After moving the slider up");
 
   // And move the slider down
 
@@ -212,15 +212,15 @@ int MAIN_NAME(int argc, char *argv[])
     {
       slider->setValue(i);
       test->showSlider(slider);
-      message(MAIN_STRING "%d. New value %d\n", i, slider->getValue());
+      message("csliderhorizontal_main: %d. New value %d\n", i, slider->getValue());
       usleep(1000); // The simulation needs this to let the X11 event loop run
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After moving the slider down");
+  updateMemoryUsage(g_mmprevious, "csliderhorizontal_main: After moving the slider down");
   sleep(1);
 
   // Clean up and exit
 
-  message(MAIN_STRING "Clean-up and exit\n");
+  message("csliderhorizontal_main: Clean-up and exit\n");
   delete slider;
   updateMemoryUsage(g_mmprevious, "After deleting the slider");
   delete test;

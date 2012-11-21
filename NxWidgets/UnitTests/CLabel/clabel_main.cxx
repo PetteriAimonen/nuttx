@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CCheckBox/main.cxx
+// NxWidgets/UnitTests/CLabel/clabel_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -41,16 +41,12 @@
 
 #include <nuttx/init.h>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <unistd.h>
 #include <debug.h>
 
 #include <nuttx/nx/nx.h>
 
-#include "crlepalettebitmap.hxx"
-#include "glyphs.hxx"
-#include "ccheckboxtest.hxx"
+#include "clabeltest.hxx"
 
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -64,8 +60,7 @@
 // Private Data
 /////////////////////////////////////////////////////////////////////////////
 
-static unsigned int g_mmInitial;
-static unsigned int g_mmprevious;
+static const char g_hello[] = "Hello, World!";
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Function Prototypes
@@ -73,137 +68,63 @@ static unsigned int g_mmprevious;
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
-
-/////////////////////////////////////////////////////////////////////////////
-// Private Functions
-/////////////////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////////////////
-// Name: updateMemoryUsage
-/////////////////////////////////////////////////////////////////////////////
-
-static void updateMemoryUsage(unsigned int previous,
-                              FAR const char *msg)
-{
-  struct mallinfo mmcurrent;
-
-  /* Get the current memory usage */
-
-#ifdef CONFIG_CAN_PASS_STRUCTS
-  mmcurrent = mallinfo();
-#else
-  (void)mallinfo(&mmcurrent);
-#endif
-
-  /* Show the change from the previous time */
-
-  message("\n%s:\n", msg);
-  message("  Before: %8d After: %8d Change: %8d\n\n",
-          previous, mmcurrent.uordblks, mmcurrent.uordblks - previous);
-
-  /* Set up for the next test */
-
-  g_mmprevious = mmcurrent.uordblks;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// Name: initMemoryUsage
-/////////////////////////////////////////////////////////////////////////////
-
-static void initMemoryUsage(void)
-{
-  struct mallinfo mmcurrent;
-
-  /* Get the current memory usage */
-
-#ifdef CONFIG_CAN_PASS_STRUCTS
-  mmcurrent = mallinfo();
-#else
-  (void)mallinfo(&mmcurrent);
-#endif
-
-  g_mmInitial  = mmcurrent.uordblks;
-  g_mmprevious = mmcurrent.uordblks;
-}
+extern "C" int clabel_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Functions
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// Name: user_start/nxheaders_main
+// nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int clabel_main(int argc, char *argv[])
 {
-  // Initialize memory monitor logic
+  // Create an instance of the font test
 
-  initMemoryUsage();
-
-  // Create an instance of the checkbox test
-
-  message(MAIN_STRING "Create CCheckBoxTest instance\n");
-  CCheckBoxTest *test = new CCheckBoxTest();
-  updateMemoryUsage(g_mmprevious, "After creating CCheckBoxTest");
+  printf("clabel_main: Create CLabelTest instance\n");
+  CLabelTest *test = new CLabelTest();
 
   // Connect the NX server
 
-  message(MAIN_STRING "Connect the CCheckBoxTest instance to the NX server\n");
+  printf("clabel_main: Connect the CLabelTest instance to the NX server\n");
   if (!test->connect())
     {
-      message(MAIN_STRING "Failed to connect the CCheckBoxTest instance to the NX server\n");
+      printf("clabel_main: Failed to connect the CLabelTest instance to the NX server\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After connecting to the server");
 
   // Create a window to draw into
 
-  message(MAIN_STRING "Create a Window\n");
+  printf("clabel_main: Create a Window\n");
   if (!test->createWindow())
     {
-      message(MAIN_STRING "Failed to create a window\n");
+      printf("clabel_main: Failed to create a window\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a window");
 
-  // Show the initial state of the checkbox
+  // Create a CLabel instance
 
-  test->showCheckBox();
-  test->showCheckBoxState();
-  sleep(1);
+  CLabel *label = test->createLabel(g_hello);
+  if (!label)
+    {
+      printf("clabel_main: Failed to create a label\n");
+      delete test;
+      return 1;
+    }
 
-  // Now click the checkbox
+  // Show the label
 
-  message(MAIN_STRING "Click 1\n");
-  test->clickCheckBox();
-  usleep(500*1000);
-  test->showCheckBoxState();
-  updateMemoryUsage(g_mmprevious, "After click 1");
-  usleep(500*1000);
-
-  message(MAIN_STRING "Click 2\n");
-  test->clickCheckBox();
-  usleep(500*1000);
-  test->showCheckBoxState();
-  updateMemoryUsage(g_mmprevious, "After click 2");
-  usleep(500*1000);
-
-  message(MAIN_STRING "Click 3\n");
-  test->clickCheckBox();
-  usleep(500*1000);
-  test->showCheckBoxState();
-  updateMemoryUsage(g_mmprevious, "After click 3");
-  sleep(2);
+  test->showLabel(label);
+  sleep(5);
 
   // Clean up and exit
 
-  message(MAIN_STRING "Clean-up and exit\n");
+  printf("clabel_main: Clean-up and exit\n");
+  delete label;
   delete test;
-  updateMemoryUsage(g_mmprevious, "After deleting the test");
-  updateMemoryUsage(g_mmInitial, "Final memory usage");
   return 0;
 }
 

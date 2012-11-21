@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CButtonArray/main.cxx
+// NxWidgets/UnitTests/CButtonArray/cbuttonarray_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -82,7 +82,7 @@ static FAR const char *g_buttonLabels[BUTTONARRAY_NCOLUMNS*BUTTONARRAY_NROWS] = 
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int cbuttonarray_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Functions
@@ -193,10 +193,10 @@ static void checkHighlighting(CButtonArray *buttonArray)
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// user_start/nxheaders_main
+// nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int cbuttonarray_main(int argc, char *argv[])
 {
   // Initialize memory monitor logic
 
@@ -204,16 +204,16 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Create an instance of the button array test
 
-  printf(MAIN_STRING "Create CButtonArrayTest instance\n");
+  printf("cbuttonarray_main: Create CButtonArrayTest instance\n");
   CButtonArrayTest *test = new CButtonArrayTest();
   updateMemoryUsage(g_mmPrevious, "After creating CButtonArrayTest");
 
   // Connect the NX server
 
-  printf(MAIN_STRING "Connect the CButtonArrayTest instance to the NX server\n");
+  printf("cbuttonarray_main: Connect the CButtonArrayTest instance to the NX server\n");
   if (!test->connect())
     {
-      printf(MAIN_STRING "Failed to connect the CButtonArrayTest instance to the NX server\n");
+      printf("cbuttonarray_main: Failed to connect the CButtonArrayTest instance to the NX server\n");
       delete test;
       return 1;
     }
@@ -221,10 +221,10 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Create a window to draw into
 
-  printf(MAIN_STRING "Create a Window\n");
+  printf("cbuttonarray_main: Create a Window\n");
   if (!test->createWindow())
     {
-      printf(MAIN_STRING "Failed to create a window\n");
+      printf("cbuttonarray_main: Failed to create a window\n");
       delete test;
       return 1;
     }
@@ -235,7 +235,7 @@ int MAIN_NAME(int argc, char *argv[])
   CButtonArray *buttonArray = test->createButtonArray();
   if (!buttonArray)
     {
-      printf(MAIN_STRING "Failed to create a button array\n");
+      printf("cbuttonarray_main: Failed to create a button array\n");
       delete test;
       return 1;
     }
@@ -248,7 +248,7 @@ int MAIN_NAME(int argc, char *argv[])
     {
       for (int i = 0; i < BUTTONARRAY_NCOLUMNS; i++)
         {
-          printf(MAIN_STRING "Label (%d,%d): %s\n", i, j, *ptr);
+          printf("cbuttonarray_main: Label (%d,%d): %s\n", i, j, *ptr);
           CNxString string = *ptr++;
           buttonArray->setText(i, j, string);
         }
@@ -257,7 +257,7 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Show the button array
 
-  printf(MAIN_STRING "Show the button array\n");
+  printf("cbuttonarray_main: Show the button array\n");
   test->showButton(buttonArray);
   sleep(1);
 
@@ -272,7 +272,7 @@ int MAIN_NAME(int argc, char *argv[])
     {
       for (int i = 0; i < BUTTONARRAY_NCOLUMNS; i++)
         {
-          printf(MAIN_STRING "Click the button (%d,%d)\n", i, j);
+          printf("cbuttonarray_main: Click the button (%d,%d)\n", i, j);
           test->click(buttonArray, i, j);
 
           // Poll for the mouse click event
@@ -285,13 +285,13 @@ int MAIN_NAME(int argc, char *argv[])
           int clickRow;
           if (buttonArray->isButtonClicked(clickColumn, clickRow))
             {
-              printf(MAIN_STRING "%s: Button (%d, %d) is clicked\n", 
+              printf("cbuttonarray_main: %s: Button (%d, %d) is clicked\n", 
                      clickColumn == i && clickRow == j ? "OK" : "ERROR",
                      clickColumn, clickRow);
             }
           else
             {
-              printf(MAIN_STRING "ERROR: No button is clicked\n");
+              printf("cbuttonarray_main: ERROR: No button is clicked\n");
             }
 
           // Wait a bit, then release the mouse button
@@ -304,7 +304,7 @@ int MAIN_NAME(int argc, char *argv[])
           test->poll(buttonArray);
           if (buttonArray->isButtonClicked(clickColumn, clickRow))
             {
-              printf(MAIN_STRING "ERROR: Button (%d, %d) is clicked\n", 
+              printf("cbuttonarray_main: ERROR: Button (%d, %d) is clicked\n", 
                      clickColumn, clickRow);
             }
  
@@ -315,7 +315,7 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Clean up and exit
 
-  printf(MAIN_STRING "Clean-up and exit\n");
+  printf("cbuttonarray_main: Clean-up and exit\n");
   delete buttonArray;
   updateMemoryUsage(g_mmPrevious, "After deleting the button array");
   delete test;

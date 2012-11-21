@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CLabel/main.cxx
+// NxWidgets/UnitTests/CTextBox/ctextbox_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -46,7 +46,7 @@
 
 #include <nuttx/nx/nx.h>
 
-#include "clabeltest.hxx"
+#include "ctextboxtest.hxx"
 
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -60,7 +60,8 @@
 // Private Data
 /////////////////////////////////////////////////////////////////////////////
 
-static const char g_hello[] = "Hello, World!";
+static const char string1[] = "Johhn ";
+static const char string2[] = "\b\b\bn Doe\r";
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Function Prototypes
@@ -68,62 +69,72 @@ static const char g_hello[] = "Hello, World!";
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int ctextbox_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Functions
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// user_start/nxheaders_main
+// nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int ctextbox_main(int argc, char *argv[])
 {
   // Create an instance of the font test
 
-  printf(MAIN_STRING "Create CLabelTest instance\n");
-  CLabelTest *test = new CLabelTest();
+  printf("ctextbox_main: Create CTextBoxTest instance\n");
+  CTextBoxTest *test = new CTextBoxTest();
 
   // Connect the NX server
 
-  printf(MAIN_STRING "Connect the CLabelTest instance to the NX server\n");
+  printf("ctextbox_main: Connect the CTextBoxTest instance to the NX server\n");
   if (!test->connect())
     {
-      printf(MAIN_STRING "Failed to connect the CLabelTest instance to the NX server\n");
+      printf("ctextbox_main: Failed to connect the CTextBoxTest instance to the NX server\n");
       delete test;
       return 1;
     }
 
   // Create a window to draw into
 
-  printf(MAIN_STRING "Create a Window\n");
+  printf("ctextbox_main: Create a Window\n");
   if (!test->createWindow())
     {
-      printf(MAIN_STRING "Failed to create a window\n");
+      printf("ctextbox_main: Failed to create a window\n");
       delete test;
       return 1;
     }
 
-  // Create a CLabel instance
+  // Create a CTextBox instance
 
-  CLabel *label = test->createLabel(g_hello);
-  if (!label)
+  CTextBox *textbox = test->createTextBox();
+  if (!textbox)
     {
-      printf(MAIN_STRING "Failed to create a label\n");
+      printf("ctextbox_main: Failed to create a text box\n");
       delete test;
       return 1;
     }
 
-  // Show the label
+  // Show the text box
 
-  test->showLabel(label);
-  sleep(5);
+  test->showTextBox(textbox);
 
+  // Wait a bit, then inject a string with a typo
+
+  sleep(1);
+  test->injectChars(textbox, sizeof(string1), (FAR const uint8_t*)string1);
+
+  // Now fix the string with backspaces and finish it correctly
+
+  usleep(500*1000);
+  test->injectChars(textbox, sizeof(string2), (FAR const uint8_t*)string2);
+  
   // Clean up and exit
 
-  printf(MAIN_STRING "Clean-up and exit\n");
-  delete label;
+  sleep(2);
+  printf("ctextbox_main: Clean-up and exit\n");
+  delete textbox;
   delete test;
   return 0;
 }

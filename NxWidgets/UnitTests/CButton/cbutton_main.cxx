@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CButton/main.cxx
+// NxWidgets/UnitTests/CButton/cbutton_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -68,39 +68,39 @@ static const char g_pushme[] = "Push Me";
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int cbutton_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Functions
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// user_start/nxheaders_main
+// nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int cbutton_main(int argc, char *argv[])
 {
   // Create an instance of the font test
 
-  printf(MAIN_STRING "Create CButtonTest instance\n");
+  printf("cbutton_main: Create CButtonTest instance\n");
   CButtonTest *test = new CButtonTest();
 
   // Connect the NX server
 
-  printf(MAIN_STRING "Connect the CButtonTest instance to the NX server\n");
+  printf("cbutton_main: Connect the CButtonTest instance to the NX server\n");
   if (!test->connect())
     {
-      printf(MAIN_STRING "Failed to connect the CButtonTest instance to the NX server\n");
+      printf("cbutton_main: Failed to connect the CButtonTest instance to the NX server\n");
       delete test;
       return 1;
     }
 
   // Create a window to draw into
 
-  printf(MAIN_STRING "Create a Window\n");
+  printf("cbutton_main: Create a Window\n");
   if (!test->createWindow())
     {
-      printf(MAIN_STRING "Failed to create a window\n");
+      printf("cbutton_main: Failed to create a window\n");
       delete test;
       return 1;
     }
@@ -110,26 +110,26 @@ int MAIN_NAME(int argc, char *argv[])
   CButton *button = test->createButton(g_pushme);
   if (!button)
     {
-      printf(MAIN_STRING "Failed to create a button\n");
+      printf("cbutton_main: Failed to create a button\n");
       delete test;
       return 1;
     }
 
   // Show the button
 
-  printf(MAIN_STRING "Show the button\n");
+  printf("cbutton_main: Show the button\n");
   test->showButton(button);
 
   // Wait two seconds, then perform a simulated mouse click on the button
 
   sleep(2);
-  printf(MAIN_STRING "Click the button\n");
+  printf("cbutton_main: Click the button\n");
   test->click();
 
   // Poll for the mouse click event (of course this can hang if something fails)
 
   bool clicked = test->poll(button);
-  printf(MAIN_STRING "Button is %s\n", clicked ? "clicked" : "released");
+  printf("cbutton_main: Button is %s\n", clicked ? "clicked" : "released");
 
   // Wait a second, then release the mouse buttone
 
@@ -139,7 +139,7 @@ int MAIN_NAME(int argc, char *argv[])
   // Poll for the mouse release event (of course this can hang if something fails)
 
   clicked = test->poll(button);
-  printf(MAIN_STRING "Button is %s\n", clicked ? "clicked" : "released");
+  printf("cbutton_main: Button is %s\n", clicked ? "clicked" : "released");
 
   // Wait a few more seconds so that the tester can ponder the result
 
@@ -147,7 +147,7 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Clean up and exit
 
-  printf(MAIN_STRING "Clean-up and exit\n");
+  printf("cbutton_main: Clean-up and exit\n");
   delete button;
   delete test;
   return 0;

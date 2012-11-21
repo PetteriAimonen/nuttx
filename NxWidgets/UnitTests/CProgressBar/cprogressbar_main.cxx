@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CProgressBar/main.cxx
+// NxWidgets/UnitTests/CProgressBar/cprogressbar_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -73,7 +73,7 @@ static unsigned int g_mmprevious;
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int cprogressbar_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Functions
@@ -132,10 +132,10 @@ static void initMemoryUsage(void)
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// Name: user_start/nxheaders_main
+// Name: nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int cprogressbar_main(int argc, char *argv[])
 {
   // Initialize memory monitor logic
 
@@ -143,43 +143,43 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Create an instance of the checkbox test
 
-  message(MAIN_STRING "Create CProgressBarTest instance\n");
+  message("cprogressbar_main: Create CProgressBarTest instance\n");
   CProgressBarTest *test = new CProgressBarTest();
   updateMemoryUsage(g_mmprevious, "After creating CProgressBarTest");
 
   // Connect the NX server
 
-  message(MAIN_STRING "Connect the CProgressBarTest instance to the NX server\n");
+  message("cprogressbar_main: Connect the CProgressBarTest instance to the NX server\n");
   if (!test->connect())
     {
-      message(MAIN_STRING "Failed to connect the CProgressBarTest instance to the NX server\n");
+      message("cprogressbar_main: Failed to connect the CProgressBarTest instance to the NX server\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After connecting to the server");
+  updateMemoryUsage(g_mmprevious, "cprogressbar_main: After connecting to the server");
 
   // Create a window to draw into
 
-  message(MAIN_STRING "Create a Window\n");
+  message("cprogressbar_main: Create a Window\n");
   if (!test->createWindow())
     {
-      message(MAIN_STRING "Failed to create a window\n");
+      message("cprogressbar_main: Failed to create a window\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a window");
+  updateMemoryUsage(g_mmprevious, "cprogressbar_main: After creating a window");
 
   // Create a progress bar
 
-  message(MAIN_STRING "Create a ProgressBar\n");
+  message("cprogressbar_main: Create a ProgressBar\n");
   CProgressBar *bar = test->createProgressBar();
   if (!bar)
     {
-      message(MAIN_STRING "Failed to create a progress bar\n");
+      message("cprogressbar_main: Failed to create a progress bar\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a progress bar");
+  updateMemoryUsage(g_mmprevious, "cprogressbar_main: After creating a progress bar");
 
   // Set the progress bar minimum and maximum values
 
@@ -187,7 +187,7 @@ int MAIN_NAME(int argc, char *argv[])
   bar->setMaximumValue(MAX_PROGRESSBAR);
   bar->setValue(0);
   bar->hidePercentageText();
-  message(MAIN_STRING "ProgressBar range %d->%d Initial value %d\n",
+  message("cprogressbar_main: ProgressBar range %d->%d Initial value %d\n",
           bar->getMinimumValue(), bar->getMaximumValue(),
           bar->getValue());
 
@@ -202,10 +202,10 @@ int MAIN_NAME(int argc, char *argv[])
     {
       bar->setValue(i);
       test->showProgressBar(bar);
-      message(MAIN_STRING "%d. New value %d\n", i, bar->getValue());
+      message("cprogressbar_main: %d. New value %d\n", i, bar->getValue());
       usleep(1000); // The simulation needs this to let the X11 event loop run
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After moving the progress bar up #1");
+  updateMemoryUsage(g_mmprevious, "cprogressbar_main: After moving the progress bar up #1");
   usleep(500*1000);
 
   // Now move the progress bar up from 0 to 100% (with percentages off)
@@ -219,15 +219,15 @@ int MAIN_NAME(int argc, char *argv[])
     {
       bar->setValue(i);
       test->showProgressBar(bar);
-      message(MAIN_STRING "%d. New value %d\n", i, bar->getValue());
+      message("cprogressbar_main: %d. New value %d\n", i, bar->getValue());
       usleep(1000); // The simulation needs this to let the X11 event loop run
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After moving the progress bar up #2");
+  updateMemoryUsage(g_mmprevious, "cprogressbar_main: After moving the progress bar up #2");
   sleep(1);
 
   // Clean up and exit
 
-  message(MAIN_STRING "Clean-up and exit\n");
+  message("cprogressbar_main: Clean-up and exit\n");
   delete bar;
   updateMemoryUsage(g_mmprevious, "After deleting the progress bar");
   delete test;

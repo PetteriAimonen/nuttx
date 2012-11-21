@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CScrollbarHorizontal/main.cxx
+// NxWidgets/UnitTests/CImage/cimage_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -48,13 +48,13 @@
 
 #include <nuttx/nx/nx.h>
 
-#include "cscrollbarhorizontaltest.hxx"
+#include "crlepalettebitmap.hxx"
+#include "glyphs.hxx"
+#include "cimagetest.hxx"
 
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
 /////////////////////////////////////////////////////////////////////////////
-
-#define MAX_SCROLLBAR 50
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Classes
@@ -64,8 +64,8 @@
 // Private Data
 /////////////////////////////////////////////////////////////////////////////
 
-static unsigned int g_mmInitial;
-static unsigned int g_mmprevious;
+static struct mallinfo g_mmInitial;
+static struct mallinfo g_mmprevious;
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Function Prototypes
@@ -73,17 +73,33 @@ static unsigned int g_mmprevious;
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int cimage_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Functions
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
+// Name: showMemoryUsage
+/////////////////////////////////////////////////////////////////////////////
+
+static void showMemoryUsage(FAR struct mallinfo *mmbefore,
+                            FAR struct mallinfo *mmafter)
+{
+  message("VARIABLE  BEFORE   AFTER\n");
+  message("======== ======== ========\n");
+  message("arena    %8d %8d\n", mmbefore->arena,    mmafter->arena);
+  message("ordblks  %8d %8d\n", mmbefore->ordblks,  mmafter->ordblks);
+  message("mxordblk %8d %8d\n", mmbefore->mxordblk, mmafter->mxordblk);
+  message("uordblks %8d %8d\n", mmbefore->uordblks, mmafter->uordblks);
+  message("fordblks %8d %8d\n", mmbefore->fordblks, mmafter->fordblks);
+}
+
+/////////////////////////////////////////////////////////////////////////////
 // Name: updateMemoryUsage
 /////////////////////////////////////////////////////////////////////////////
 
-static void updateMemoryUsage(unsigned int previous,
+static void updateMemoryUsage(FAR struct mallinfo *previous,
                               FAR const char *msg)
 {
   struct mallinfo mmcurrent;
@@ -99,12 +115,15 @@ static void updateMemoryUsage(unsigned int previous,
   /* Show the change from the previous time */
 
   message("\n%s:\n", msg);
-  message("  Before: %8d After: %8d Change: %8d\n\n",
-          previous, mmcurrent.uordblks, mmcurrent.uordblks - previous);
+  showMemoryUsage(previous, &mmcurrent);
 
   /* Set up for the next test */
 
-  g_mmprevious = mmcurrent.uordblks;
+#ifdef CONFIG_CAN_PASS_STRUCTS
+  g_mmprevious = mmcurrent;
+#else
+  memcpy(&g_mmprevious, &mmcurrent, sizeof(struct mallinfo));
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -113,18 +132,13 @@ static void updateMemoryUsage(unsigned int previous,
 
 static void initMemoryUsage(void)
 {
-  struct mallinfo mmcurrent;
-
-  /* Get the current memory usage */
-
 #ifdef CONFIG_CAN_PASS_STRUCTS
-  mmcurrent = mallinfo();
+  g_mmInitial = mallinfo();
+  g_mmprevious = g_mmInitial;
 #else
-  (void)mallinfo(&mmcurrent);
+  (void)mallinfo(&g_mmInitial);
+  memcpy(&g_mmprevious, &g_mmInitial, sizeof(struct mallinfo));
 #endif
-
-  g_mmInitial  = mmcurrent.uordblks;
-  g_mmprevious = mmcurrent.uordblks;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,100 +146,77 @@ static void initMemoryUsage(void)
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// Name: user_start/nxheaders_main
+// Name: nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int cimage_main(int argc, char *argv[])
 {
   // Initialize memory monitor logic
 
   initMemoryUsage();
 
-  // Create an instance of the checkbox test
+  // Create an instance of the font test
 
-  message(MAIN_STRING "Create CScrollbarHorizontalTest instance\n");
-  CScrollbarHorizontalTest *test = new CScrollbarHorizontalTest();
-  updateMemoryUsage(g_mmprevious, "After creating CScrollbarHorizontalTest");
+  message("cimage_main: Create CImageTest instance\n");
+  CImageTest *test = new CImageTest();
+  updateMemoryUsage(&g_mmprevious, "After creating CImageTest");
 
   // Connect the NX server
 
-  message(MAIN_STRING "Connect the CScrollbarHorizontalTest instance to the NX server\n");
+  message("cimage_main: Connect the CImageTest instance to the NX server\n");
   if (!test->connect())
     {
-      message(MAIN_STRING "Failed to connect the CScrollbarHorizontalTest instance to the NX server\n");
+      message("cimage_main: Failed to connect the CImageTest instance to the NX server\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After connecting to the server");
+  updateMemoryUsage(&g_mmprevious, "After connecting to the server");
 
   // Create a window to draw into
 
-  message(MAIN_STRING "Create a Window\n");
+  message("cimage_main: Create a Window\n");
   if (!test->createWindow())
     {
-      message(MAIN_STRING "Failed to create a window\n");
+      message("cimage_main: Failed to create a window\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a window");
+  updateMemoryUsage(&g_mmprevious, "After creating a window");
 
-  // Create a scrollbar
+  // Create an instance of the NuttX logo
 
-  message(MAIN_STRING "Create a Scrollbar\n");
-  CScrollbarHorizontal *scrollbar = test->createScrollbar();
-  if (!scrollbar)
+  CRlePaletteBitmap *nuttxBitmap = new CRlePaletteBitmap(&g_nuttxBitmap);
+  updateMemoryUsage(&g_mmprevious, "After creating the bitmap");
+
+  // Create a CImage instance
+
+  CImage *image = test->createImage(static_cast<IBitmap*>(nuttxBitmap));
+  if (!image)
     {
-      message(MAIN_STRING "Failed to create a scrollbar\n");
+      message("cimage_main: Failed to create a image\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a scrollbar");
+  updateMemoryUsage(&g_mmprevious, "After creating CImage");
 
-  // Set the scrollbar minimum and maximum values
+  // Show the image
 
-  scrollbar->setMinimumValue(0);
-  scrollbar->setMaximumValue(MAX_SCROLLBAR);
-  scrollbar->setValue(0);
-  message(MAIN_STRING "Scrollbar range %d->%d Initial value %d\n",
-          scrollbar->getMinimumValue(), scrollbar->getMaximumValue(),
-          scrollbar->getValue());
-
-  // Show the initial state of the checkbox
-
-  test->showScrollbar(scrollbar);
-  sleep(1);
-
-  // Now move the scrollbar up
-
-  for (int i = 0; i <= MAX_SCROLLBAR; i++)
-    {
-      scrollbar->setValue(i);
-      test->showScrollbar(scrollbar);
-      message(MAIN_STRING "%d. New value %d\n", i, scrollbar->getValue());
-      usleep(1000); // The simulation needs this to let the X11 event loop run
-    }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After moving the scrollbar up");
-
-  // And move the scrollbar down
-
-  for (int i = MAX_SCROLLBAR; i >= 0; i--)
-    {
-      scrollbar->setValue(i);
-      test->showScrollbar(scrollbar);
-      message(MAIN_STRING "%d. New value %d\n", i, scrollbar->getValue());
-      usleep(1000); // The simulation needs this to let the X11 event loop run
-    }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After moving the scrollbar down");
-  sleep(1);
+  test->showImage(image);
+  updateMemoryUsage(&g_mmprevious, "After showing the image");
+  sleep(5);
 
   // Clean up and exit
 
-  message(MAIN_STRING "Clean-up and exit\n");
-  delete scrollbar;
-  updateMemoryUsage(g_mmprevious, "After deleting the scrollbar");
+  message("cimage_main: Clean-up and exit\n");
+  delete image;
+  updateMemoryUsage(&g_mmprevious, "After deleting CImage");
+
+  delete nuttxBitmap;
+  updateMemoryUsage(&g_mmprevious, "After deleting the bitmap");
+
   delete test;
-  updateMemoryUsage(g_mmprevious, "After deleting the test");
-  updateMemoryUsage(g_mmInitial, "Final memory usage");
+  updateMemoryUsage(&g_mmprevious, "After deleting the test");
+  updateMemoryUsage(&g_mmInitial, "Final memory usage");
   return 0;
 }
 

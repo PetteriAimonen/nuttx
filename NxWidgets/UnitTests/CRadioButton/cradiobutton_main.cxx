@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CRadioButton/main.cxx
+// NxWidgets/UnitTests/CRadioButton/cradiobutton_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -73,7 +73,7 @@ static unsigned int g_mmprevious;
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int cradiobutton_main(int argc, char *argv[]);
 
 /////////////////////////////////////////////////////////////////////////////
 // Private Functions
@@ -132,10 +132,10 @@ static void initMemoryUsage(void)
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// Name: user_start/nxheaders_main
+// Name: nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int cradiobutton_main(int argc, char *argv[])
 {
   // Initialize memory monitor logic
 
@@ -143,60 +143,60 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Create an instance of the radio button test
 
-  message(MAIN_STRING "Create CRadioButtonTest instance\n");
+  message("cradiobutton_main: Create CRadioButtonTest instance\n");
   CRadioButtonTest *test = new CRadioButtonTest();
   updateMemoryUsage(g_mmprevious, "After creating CRadioButtonTest");
 
   // Connect the NX server
 
-  message(MAIN_STRING "Connect the CRadioButtonTest instance to the NX server\n");
+  message("cradiobutton_main: Connect the CRadioButtonTest instance to the NX server\n");
   if (!test->connect())
     {
-      message(MAIN_STRING "Failed to connect the CRadioButtonTest instance to the NX server\n");
+      message("cradiobutton_main: Failed to connect the CRadioButtonTest instance to the NX server\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After connecting to the server");
+  updateMemoryUsage(g_mmprevious, "cradiobutton_main: After connecting to the server");
 
   // Create a window to draw into
 
-  message(MAIN_STRING "Create a Window\n");
+  message("cradiobutton_main: Create a Window\n");
   if (!test->createWindow())
     {
-      message(MAIN_STRING "Failed to create a window\n");
+      message("cradiobutton_main: Failed to create a window\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating a window");
+  updateMemoryUsage(g_mmprevious, "cradiobutton_main: After creating a window");
 
   // Create three radio buttons
 
   CRadioButton *button1 = test->newRadioButton();
   if (!button1)
     {
-      message(MAIN_STRING "Failed to create radio button 1\n");
+      message("cradiobutton_main: Failed to create radio button 1\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating radio button 1");
+  updateMemoryUsage(g_mmprevious, "cradiobutton_main: After creating radio button 1");
 
   CRadioButton *button2 = test->newRadioButton();
   if (!button2)
     {
-      message(MAIN_STRING "Failed to create radio button 2\n");
+      message("cradiobutton_main: Failed to create radio button 2\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating radio button 2");
+  updateMemoryUsage(g_mmprevious, "cradiobutton_main: After creating radio button 2");
 
   CRadioButton *button3 = test->newRadioButton();
   if (!button3)
     {
-      message(MAIN_STRING "Failed to create radio button 3\n");
+      message("cradiobutton_main: Failed to create radio button 3\n");
       delete test;
       return 1;
     }
-  updateMemoryUsage(g_mmprevious, MAIN_STRING "After creating radio button 3");
+  updateMemoryUsage(g_mmprevious, "cradiobutton_main: After creating radio button 3");
 
   // Show the initial state of the buttons
 
@@ -206,21 +206,21 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Now push some buttons
 
-  message(MAIN_STRING "Pushing button 1\n");
+  message("cradiobutton_main: Pushing button 1\n");
   test->pushButton(button1);
   usleep(500*1000);
   test->showButtonState();
   updateMemoryUsage(g_mmprevious, "After pushing button 1");
   usleep(500*1000);
 
-  message(MAIN_STRING "Pushing button 2\n");
+  message("cradiobutton_main: Pushing button 2\n");
   test->pushButton(button2);
   usleep(500*1000);
   test->showButtonState();
   updateMemoryUsage(g_mmprevious, "After pushing button 2");
   usleep(500*1000);
 
-  message(MAIN_STRING "Pushing button 3\n");
+  message("cradiobutton_main: Pushing button 3\n");
   test->pushButton(button3);
   usleep(500*1000);
   test->showButtonState();
@@ -229,7 +229,7 @@ int MAIN_NAME(int argc, char *argv[])
 
   // Clean up and exit
 
-  message(MAIN_STRING "Clean-up and exit\n");
+  message("cradiobutton_main: Clean-up and exit\n");
   delete test;
   updateMemoryUsage(g_mmprevious, "After deleting the test");
   updateMemoryUsage(g_mmInitial, "Final memory usage");

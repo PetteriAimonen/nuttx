@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// NxWidgets/UnitTests/CTextBox/main.cxx
+// NxWidgets/UnitTests/CLatchButton/clatchbutton_main.cxx
 //
 //   Copyright (C) 2012 Gregory Nutt. All rights reserved.
 //   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -46,7 +46,7 @@
 
 #include <nuttx/nx/nx.h>
 
-#include "ctextboxtest.hxx"
+#include "clatchbuttontest.hxx"
 
 /////////////////////////////////////////////////////////////////////////////
 // Definitions
@@ -60,8 +60,7 @@
 // Private Data
 /////////////////////////////////////////////////////////////////////////////
 
-static const char string1[] = "Johhn ";
-static const char string2[] = "\b\b\bn Doe\r";
+static const char g_pushme[] = "Push Me";
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Function Prototypes
@@ -69,72 +68,131 @@ static const char string2[] = "\b\b\bn Doe\r";
 
 // Suppress name-mangling
 
-extern "C" int MAIN_NAME(int argc, char *argv[]);
+extern "C" int clatchbutton_main(int argc, char *argv[]);
+
+/////////////////////////////////////////////////////////////////////////////
+// Private Functions
+/////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+// Name: showButtonState
+/////////////////////////////////////////////////////////////////////////////
+
+static void showButtonState(CLatchButton *button, bool &clicked, bool &latched)
+{
+  bool nowClicked = button->isClicked();
+  bool nowLatched = button->isLatched();
+
+  printf("showButtonState: Button state: %s and %s\n",
+    nowClicked ? "clicked" : "released",
+    nowLatched ? "latched" : "unlatched");
+
+  if (clicked != nowClicked || latched != nowLatched)
+    {
+      printf("showButtonState: ERROR: Expected %s and %s\n",
+        clicked ? "clicked" : "released",
+        latched ? "latched" : "unlatched");
+
+      clicked = nowClicked;
+      latched = nowLatched;
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Public Functions
 /////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////
-// user_start/nxheaders_main
+// nxheaders_main
 /////////////////////////////////////////////////////////////////////////////
 
-int MAIN_NAME(int argc, char *argv[])
+int clatchbutton_main(int argc, char *argv[])
 {
   // Create an instance of the font test
 
-  printf(MAIN_STRING "Create CTextBoxTest instance\n");
-  CTextBoxTest *test = new CTextBoxTest();
+  printf("clatchbutton_main: Create CLatchButtonTest instance\n");
+  CLatchButtonTest *test = new CLatchButtonTest();
 
   // Connect the NX server
 
-  printf(MAIN_STRING "Connect the CTextBoxTest instance to the NX server\n");
+  printf("clatchbutton_main: Connect the CLatchButtonTest instance to the NX server\n");
   if (!test->connect())
     {
-      printf(MAIN_STRING "Failed to connect the CTextBoxTest instance to the NX server\n");
+      printf("clatchbutton_main: Failed to connect the CLatchButtonTest instance to the NX server\n");
       delete test;
       return 1;
     }
 
   // Create a window to draw into
 
-  printf(MAIN_STRING "Create a Window\n");
+  printf("clatchbutton_main: Create a Window\n");
   if (!test->createWindow())
     {
-      printf(MAIN_STRING "Failed to create a window\n");
+      printf("clatchbutton_main: Failed to create a window\n");
       delete test;
       return 1;
     }
 
-  // Create a CTextBox instance
+  // Create a CLatchButton instance
 
-  CTextBox *textbox = test->createTextBox();
-  if (!textbox)
+  CLatchButton *button = test->createButton(g_pushme);
+  if (!button)
     {
-      printf(MAIN_STRING "Failed to create a text box\n");
+      printf("clatchbutton_main: Failed to create a button\n");
       delete test;
       return 1;
     }
 
-  // Show the text box
+  // Show the button
 
-  test->showTextBox(textbox);
+  printf("clatchbutton_main: Show the button\n");
+  test->showButton(button);
 
-  // Wait a bit, then inject a string with a typo
+  bool clicked = false;
+  bool latched = false;
+  showButtonState(button, clicked, latched);
 
-  sleep(1);
-  test->injectChars(textbox, sizeof(string1), (FAR const uint8_t*)string1);
+  // Toggle the button state a few times
 
-  // Now fix the string with backspaces and finish it correctly
+  for (int i = 0; i < 8; i++)
+    {
+      // Wait two seconds, then perform a simulated mouse click on the button
 
-  usleep(500*1000);
-  test->injectChars(textbox, sizeof(string2), (FAR const uint8_t*)string2);
-  
+      sleep(2);
+      printf("clatchbutton_main: Click the button\n");
+      test->click();
+      test->poll(button);
+
+      // Test the button state it should be clicked with the latch state
+      // toggled
+
+      clicked = true;
+      latched = !latched;
+      showButtonState(button, clicked, latched);
+
+      // And release the button after 0.5 seconds
+
+      usleep(500 * 1000);
+      printf("clatchbutton_main: Release the button\n");
+      test->release();
+      test->poll(button);
+
+      // Test the button state it should be unclicked with the latch state
+      // unchanged
+
+      clicked = false;
+      showButtonState(button, clicked, latched);
+      fflush(stdout);
+    }
+
+  // Wait a few more seconds so that the tester can ponder the result
+
+  sleep(3);
+
   // Clean up and exit
 
-  sleep(2);
-  printf(MAIN_STRING "Clean-up and exit\n");
-  delete textbox;
+  printf("clatchbutton_main: Clean-up and exit\n");
+  delete button;
   delete test;
   return 0;
 }
