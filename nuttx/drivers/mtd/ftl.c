@@ -229,6 +229,9 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
   remaining = nblocks;
   if (alignedblock > startblock)
     {
+      /* Check if the write is shorter than to the end of erase block */
+      bool short_write = remaining < (alignedblock - startblock);
+      
       /* Read the full erase block into the buffer */
 
       rwblock = startblock & ~mask;
@@ -252,7 +255,12 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
       /* Copy the user data at the end of the buffered erase block */
 
       offset = (startblock & mask) * dev->geo.blocksize;
-      nbytes = dev->geo.erasesize - offset;
+      
+      if (short_write)
+        nbytes = remaining * dev->geo.blocksize;
+      else
+        nbytes = dev->geo.erasesize - offset;
+      
       fvdbg("Copy %d bytes into erase block=%d at offset=%d\n",
              nbytes, eraseblock, offset);
       memcpy(dev->eblock + offset, buffer, nbytes);
@@ -268,7 +276,11 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
 
       /* Then update for amount written */
 
-      remaining -= dev->blkper - (startblock & mask);
+      if (short_write)
+        remaining = 0;
+      else
+        remaining -= dev->blkper - (startblock & mask);
+      
       buffer    += nbytes;
     }
 
