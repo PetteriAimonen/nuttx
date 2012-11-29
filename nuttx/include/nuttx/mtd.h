@@ -233,6 +233,9 @@ EXTERN FAR struct mtd_dev_s *sst25_initialize(FAR struct spi_dev_s *dev);
 
 EXTERN FAR struct mtd_dev_s *w25_initialize(FAR struct spi_dev_s *dev);
 
+
+EXTERN FAR struct mtd_dev_s *at25_initialize(FAR struct spi_dev_s *dev);
+
 #undef EXTERN
 #ifdef __cplusplus
 }
