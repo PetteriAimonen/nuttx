@@ -75,6 +75,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <debug.h>
 
 #include "cwidgetcontrol.hxx"
 #include "cscrollingpanel.hxx"
@@ -113,9 +114,12 @@ CScrollingPanel::CScrollingPanel(CWidgetControl *pWidgetControl,
 : CNxWidget(pWidgetControl, x, y, width, height, flags, style)
 {
   m_widgetControl = pWidgetControl;
+  
+  m_flags.permeable = true;
+  m_flags.borderless = true;
+  
   CRect rect;
   getClientRect(rect);
-
   m_canvasWidth   = rect.getWidth();
   m_canvasHeight  = rect.getHeight();
   m_canvasX       = 0;
@@ -124,8 +128,6 @@ CScrollingPanel::CScrollingPanel(CWidgetControl *pWidgetControl,
   setAllowsVerticalScroll(true);
   setAllowsHorizontalScroll(true);
   setContentScrolled(true);
-
-  m_flags.permeable = true;
 }
 
 /**
@@ -186,6 +188,24 @@ void CScrollingPanel::scroll(int32_t dx, int32_t dy)
           CGraphicsPort *port = m_widgetControl->getGraphicsPort();
           port->move(getX(), getY(), dx, dy, rect.getWidth(), rect.getHeight());
 
+          if (dx > 0)
+          {
+            revealedRects.push_back(CRect(getX(), getY(), dx, rect.getHeight()));
+          }
+          else if (dx < 0)
+          {
+            revealedRects.push_back(CRect(getX() + rect.getWidth() + dx, getY(), -dx, rect.getHeight()));
+          }
+          
+          if (dy > 0)
+          {
+            revealedRects.push_back(CRect(getX(), getY(), rect.getWidth(), dy));
+          }
+          else if (dy < 0)
+          {
+            revealedRects.push_back(CRect(getX(), getY() + rect.getHeight() + dy, rect.getWidth(), -dy));
+          }
+          
           // Adjust the scroll values
 
           m_canvasY += dy;
@@ -193,12 +213,19 @@ void CScrollingPanel::scroll(int32_t dx, int32_t dy)
 
           if (revealedRects.size() > 0)
             {
-              // Draw revealed sections
+              // Draw background to revealed sections
+              // Children will redraw themselves in moveTo.
 
               for (int i = 0; i < revealedRects.size(); ++i)
                 {
-                  drawBorder(port);
-                  drawContents(port);
+                  CRect &rrect = revealedRects[i];
+                  gvdbg("Redrawing %d,%d,%d,%d after scroll\n",
+                        rrect.getX(), rrect.getY(),
+                        rrect.getWidth(), rrect.getHeight());
+                        
+                  port->drawFilledRect(rrect.getX(), rrect.getY(),
+                                       rrect.getWidth(), rrect.getHeight(),
+                                       getBackgroundColor());
                 }
             }
         }
