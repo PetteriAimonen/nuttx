@@ -222,3 +222,30 @@ errout:
   set_errno(ret);
   return ERROR;
 }
+
+/****************************************************************************
+ * Name: fstat
+ ****************************************************************************/
+int fstat(int fd, FAR struct stat *buf)
+{
+  FAR struct filelist *list;
+  
+  list = sched_getfiles();
+  if (!list)
+    {
+      set_errno(EMFILE);
+      return ERROR;
+    }
+  else if ((unsigned int)fd < CONFIG_NFILE_DESCRIPTORS)
+    {
+      FAR struct file *this_file = &list->fl_files[fd];
+      FAR struct inode *inode    = this_file->f_inode;
+  
+      return stat(inode->i_name, buf);
+    }
+  else
+    {
+      set_errno(EBADF);
+      return ERROR;
+    }
+}
