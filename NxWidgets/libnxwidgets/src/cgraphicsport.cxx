@@ -827,7 +827,7 @@ void CGraphicsPort::move(nxgl_coord_t x, nxgl_coord_t y,
   rect.pt1.x = x;
   rect.pt1.y = y;
   rect.pt2.x = x + width - 1;
-  rect.pt2.y = y = height -1;
+  rect.pt2.y = y + height - 1;
 
   struct nxgl_point_s offset;
   offset.x = deltaX;
