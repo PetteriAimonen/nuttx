@@ -50,6 +50,7 @@
 #include <signal.h>         /* Needed for sigset_t */
 #include <time.h>           /* Needed for struct timespec */
 #include <nuttx/compiler.h> /* For noreturn_function */
+#include <unistd.h>         /* For getpid */
 
 /********************************************************************************
  * Compilation Switches
