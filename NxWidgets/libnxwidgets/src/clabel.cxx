@@ -301,21 +301,31 @@ void CLabel::drawContents(CGraphicsPort *port)
       backColor = getBackgroundColor();
     }
 
-  // Draw the background (excluding the border)
-
-  port->drawFilledRect(rect.getX(), rect.getY(),
-                       rect.getWidth(), rect.getHeight(), backColor);
-
   // Get the X/Y position of the text within the Label
 
   struct nxgl_point_s pos;
   pos.x = rect.getX() + m_align.x;
   pos.y = rect.getY() + m_align.y;
 
-  // Add the text using the selected color
+  CNxFont* font = getFont();
+  int height = font->getHeight();
+  int width = font->getStringWidth(m_text);
+    
+  // Draw the background (excluding the border and the text area)
+
+  port->drawFilledRect(rect.getX(), rect.getY(),
+                       pos.x - rect.getX(), rect.getHeight(), backColor); // Left
+  port->drawFilledRect(pos.x + width, rect.getY(),
+                       rect.getX2() - (pos.x + width) + 1, rect.getHeight(), backColor); // Right
+  port->drawFilledRect(pos.x, rect.getY(),
+                       width, pos.y - rect.getY(), backColor); // Top
+  port->drawFilledRect(pos.x, pos.y + height,
+                       width, rect.getY2() - (pos.y + height) + 1, backColor); // Bottom
+  
+  // Add the text using the selected color and background color
 
   port->drawText(&pos, &rect, getFont(), m_text, 0, m_text.getLength(),
-                 textColor);
+                 textColor, backColor);
 }
 
 /**
