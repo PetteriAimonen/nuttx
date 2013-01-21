@@ -1443,6 +1443,12 @@ void CNxWidget::useWidgetStyle(const CWidgetStyle *style)
   m_style.font                      = style->font;
 }
 
+void CNxWidget::drawContents(CGraphicsPort* port)
+{
+  port->drawFilledRect(getX(), getY(), getWidth(), getHeight(),
+                       getBackgroundColor());
+}
+
 /**
  * Draw all visible regions of this widget's children.
  */
