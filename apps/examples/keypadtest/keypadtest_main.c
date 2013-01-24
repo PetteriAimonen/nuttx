@@ -1,7 +1,7 @@
 /****************************************************************************
- * examples/pashello/pashello.c
+ * examples/keypadtest/keypadtest_main.c
  *
- *   Copyright (C) 2008-2009, 2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2011 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *    notice, this list of conditions and the following disclaimer in
  *    the documentation and/or other materials provided with the
  *    distribution.
- * 3. Neither the name NuttX nor the names of its contributors may be
+ * 3. Neither the name Gregory Nutt nor the names of its contributors may be
  *    used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -39,95 +39,100 @@
 
 #include <nuttx/config.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <debug.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-#include "pexec.h"
-#include "pedefs.h"
-#include "pashello.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sched.h>
+#include <errno.h>
+
+#include <nuttx/input/keypad.h>
 
 /****************************************************************************
  * Definitions
  ****************************************************************************/
+/* Configuration ************************************************************/
 
-#ifndef CONFIG_PASHELLO_VARSTACKSIZE
-# define CONFIG_PASHELLO_VARSTACKSIZE 1024
+/* Sanity checking */
+
+/* Provide some default values for other configuration settings */
+
+#ifndef CONFIG_EXAMPLES_KEYPAD_DEVNAME
+#  define CONFIG_EXAMPLES_KEYPAD_DEVNAME "/dev/keypad"
 #endif
 
-#ifndef CONFIG_PASHELLO_STRSTACKSIZE
-# define CONFIG_PASHELLO_STRSTACKSIZE 128
-#endif
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
 /****************************************************************************
- * Public Functions
+ * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Name: prun
- *
- * Description:
- *   This function executes the P-Code program until a stopping condition
- *   is encountered.
- *
- ****************************************************************************/
-
-static void prun(FAR struct pexec_s *st)
-{
-  int errcode;
-
-  for (;;)
-    {
-      /* Execute the instruction; Check for exceptional conditions */
-
-      errcode = pexec(st);
-      if (errcode != eNOERROR) break;
-    }
-
-  if (errcode != eEXIT)
-    {
-      printf("Runtime error 0x%02x -- Execution Stopped\n", errcode);
-    }
-}
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * pashello_main
+ * Name: keypadtest_main
  ****************************************************************************/
 
-int pashello_main(int argc, FAR char *argv[])
+int keypadtest_main(int argc, char *argv[])
 {
-  FAR struct pexec_s *st;
+  char buffer[256];
+  ssize_t nbytes;
+  int fd;
+  int ret;
 
-  /* Register the /dev/hello driver */
+  /* First, register the keyboard device(s) */
 
-  hello_register();
-
-  /* Load the POFF file */
-
-  st = pload("/dev/hello", CONFIG_PASHELLO_VARSTACKSIZE, CONFIG_PASHELLO_STRSTACKSIZE);
-  if (!st)
+  printf("keypadtest_main: Register keyboard device\n");
+  ret = keypad_kbdinit();
+  if (ret != OK)
     {
-      fprintf(stderr, "pashello_main: ERROR: Could not load /dev/hello\n");
-      exit(1);
+      printf("keypadtest_main: Failed to register the KBD class\n");
+      fflush(stdout);
+      return 1;
     }
-  printf("pashello_main: /dev/hello Loaded\n");
-  printf("pashello_main: Interpreter started:\n");
 
-  /* And start program execution */
+  /* Open the configured keyboard device. */
 
-  prun(st);
+  printf("keypadtest_main: Opening device %s\n", CONFIG_EXAMPLES_KEYPAD_DEVNAME);
+  fd = open(CONFIG_EXAMPLES_KEYPAD_DEVNAME, O_RDONLY);
+  if (fd < 0)
+    {
+      printf("keypadtest_main: open() failed: %d\n", errno);
+      fflush(stdout);
+      return 1;
+    }
 
-  /* Clean up resources used by the interpreter */
+  printf("keypadtest_main: Device %s opened\n", CONFIG_EXAMPLES_KEYPAD_DEVNAME);
+  fflush(stdout);
 
-  printf("pashello_main: Interpreter terminated");
-  pexec_release(st);
+  /* Loop until there is a read failure */
+
+  do
+    {
+      /* Read a buffer of data */
+
+      nbytes = read(fd, buffer, 256);
+      if (nbytes > 0)
+        {
+          /* On success, echo the buffer to stdout */
+
+          (void)write(1, buffer, nbytes);
+        }
+    }
+  while (nbytes >= 0);
+
+  printf("keypadtest_main: Closing device %s: %d\n", CONFIG_EXAMPLES_KEYPAD_DEVNAME, (int)nbytes);
+  fflush(stdout);
+  close(fd);
   return 0;
 }

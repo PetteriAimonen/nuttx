@@ -50,10 +50,6 @@
 #include <unistd.h>
 #include <errno.h>
 
-#if CONFIG_NFILE_DESCRIPTORS > 0
-# include <fcntl.h>
-#endif
-
 #include <nuttx/usb/usbdev_trace.h>
 
 /****************************************************************************
@@ -545,11 +541,6 @@ void nsh_usbtrace(void);
 #ifndef CONFIG_NSH_DISABLE_XD
   int cmd_xd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
-#if CONFIG_NFILE_DESCRIPTORS > 0
-#ifndef CONFIG_NSH_DISABLE_HEXDUMP
-int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#endif
-#endif
   
 #if !defined(CONFIG_NSH_DISABLESCRIPT) && !defined(CONFIG_NSH_DISABLE_TEST)
   int cmd_test(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
@@ -572,6 +563,9 @@ int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  ifndef CONFIG_NSH_DISABLE_DD
       int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif
+#  ifndef CONFIG_NSH_DISABLE_HEXDUMP
+      int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+#   endif
 #  ifndef CONFIG_NSH_DISABLE_LS
       int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #  endif

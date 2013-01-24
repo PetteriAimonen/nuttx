@@ -46,6 +46,10 @@
 #include <string.h>
 #include <errno.h>
 
+#if CONFIG_NFILE_DESCRIPTORS > 0
+# include <fcntl.h>
+#endif
+
 #include "nsh.h"
 #include "nsh_console.h"
 
@@ -99,7 +103,7 @@ int mem_parse(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv,
       pcvalue++;
 
       lvalue = (unsigned long)strtol(pcvalue, NULL, 16);
-      if (lvalue > 0xffffffff)
+      if (lvalue > 0xffffffffL)
         {
           return -EINVAL;
         }
@@ -127,6 +131,7 @@ int mem_parse(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv,
     {
       mem->dm_count = 1;
     }
+
   return OK;
 }
 
@@ -363,20 +368,21 @@ int cmd_xd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   uint8_t buffer[IOBUFFERSIZE];
+  char msg[32];
+  int position;
   int fd;
   int ret = OK;
-  char msg[32];
   
   /* Open the file for reading */
 
   fd = open(argv[1], O_RDONLY);
   if (fd < 0)
-  {
-    nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "open", NSH_ERRNO);
-    return ERROR;
-  }
+    {
+      nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "open", NSH_ERRNO);
+      return ERROR;
+    }
   
-  int position = 0;
+  position = 0;
   for (;;)
   {
     int nbytesread = read(fd, buffer, IOBUFFERSIZE);
@@ -384,22 +390,22 @@ int cmd_hexdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     /* Check for read errors */
 
     if (nbytesread < 0)
-    {
-      int errval = errno;
-      nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "read", NSH_ERRNO_OF(errval));
-      ret = ERROR;
-      break;
-    }
+      {
+        int errval = errno;
+        nsh_output(vtbl, g_fmtcmdfailed, "hexdump", "read", NSH_ERRNO_OF(errval));
+        ret = ERROR;
+        break;
+      }
     else if (nbytesread > 0)
-    {
-      snprintf(msg, sizeof(msg), "%s at %08x", argv[1], position);
-      nsh_dumpbuffer(vtbl, msg, buffer, nbytesread);
-      position += nbytesread;
-    }
+      {
+        snprintf(msg, sizeof(msg), "%s at %08x", argv[1], position);
+        nsh_dumpbuffer(vtbl, msg, buffer, nbytesread);
+        position += nbytesread;
+      }
     else
-    {
-      break; // EOF
-    }
+      {
+        break; // EOF
+      }
   }
   
   (void)close(fd);

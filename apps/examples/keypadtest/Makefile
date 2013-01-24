@@ -1,7 +1,7 @@
 ############################################################################
-# apps/examples/composite/Makefile
+# apps/examples/keypadtest/Makefile
 #
-#   Copyright (C) 2012 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,10 +37,10 @@
 -include $(TOPDIR)/Make.defs
 include $(APPDIR)/Make.defs
 
-# USB device mass storage example
+# Keypad Test Example
 
 ASRCS		=
-CSRCS		= composite_main.c
+CSRCS		= keypadtest_main.c
 
 AOBJS		= $(ASRCS:.S=$(OBJEXT))
 COBJS		= $(CSRCS:.c=$(OBJEXT))
@@ -58,24 +58,20 @@ else
 endif
 endif
 
+# helloxx built-in application info
+
+APPNAME         = keypadtest
+PRIORITY        = SCHED_PRIORITY_DEFAULT
+STACKSIZE       = 2048
+
 ROOTDEPPATH	= --dep-path .
-
-# USB storage built-in application info
-
-APPNAME1	= conn
-PRIORITY1	= SCHED_PRIORITY_DEFAULT
-STACKSIZE1	= 2048
-
-APPNAME2	= disconn
-PRIORITY2	= SCHED_PRIORITY_DEFAULT
-STACKSIZE2	= 2048
 
 # Common build
 
-VPATH		= 
+VPATH		=
 
 all: .built
-.PHONY: context clean depend distclean
+.PHONY: clean depend distclean
 
 $(AOBJS): %$(OBJEXT): %.S
 	$(call ASSEMBLE, $<, $@)
@@ -89,8 +85,7 @@ $(COBJS): %$(OBJEXT): %.c
 
 .context:
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
-	$(call REGISTER,$(APPNAME1),$(PRIORITY1),$(STACKSIZE1),$(APPNAME1)_main)
-	$(call REGISTER,$(APPNAME2),$(PRIORITY2),$(STACKSIZE2),$(APPNAME2)_main)
+	$(call REGISTER,$(APPNAME),$(PRIORITY),$(STACKSIZE),$(APPNAME)_main)
 	@touch $@
 endif
 
@@ -111,4 +106,3 @@ distclean: clean
 	$(call DELFILE, .depend)
 
 -include Make.dep
-
