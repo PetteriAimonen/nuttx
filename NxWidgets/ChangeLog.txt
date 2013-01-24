@@ -171,4 +171,52 @@
 * Kconfig:  Add option to turn on the memory monitor feature of the
   NxWidgets/NxWM unit tests.
 
-1.4 2012-xx-xx Gregory Nutt <gnutt@nuttx.org>
+1.4 2012-12-20 Gregory Nutt <gnutt@nuttx.org>
+
+* libnxwidgets/Makefile, NxWidgets/nxwm/Makefile, and
+  NxWidgets/UnitTests/nxwm/Makefile:  Makefile improvements from
+  submitted by Petteri Aimonen.  Other Makefiles in the UnitTests
+  directory probably also need these changes.
+* libnxwidgets/src/ccallback.cxx: Fix misplaced #endif.  Provided
+  by Petteri Aimonen.
+* libnxwidgets/src/cnxserver.cxx:  Reduce delay to allow NX server
+  to start.  One second was un-necessarily long.  Reduced to 50 MS.
+  Reduction suggested by Petteri Aimonen.
+* tools/bitmap_converter.py:  This script converts from any image type
+  supported by Python imaging library to the RLE-encoded format used by
+  NxWidgets.
+* NxWidgets/nxwm/src/capplicationwindow.cxx: If the "desktop" is empty,
+  users have no need to minimize any windows. If the buttons are small,
+  it's easy to hit minimize button accidentally when trying to close an
+  application.  Contributed by Petteri Aimonen.
+* NxWidgets/nxwm/src/ctaskbar.cxx:  Add an option to eliminate the
+  background image.  Contributed by Petteri Aimonen.
+* NxWidgets/nxwm/src/chexcalculator.cxx and NxWidgets/nxwm/src/cstartwindow.cxx:
+  The config settings CONFIG_NXWM_STARTWINDOW_ICON and CONFIG_NXWM_HEXCALCULATOR_ICON
+  allow changing the icons used for these applications. However, to declare symbols
+  for these icons user would need to modify NxWidgets header files.
+  This commit adds a simple forward declaration to the relevant files, based on the
+  configured icon. If the icon does not exist, linker will give an error about it.
+  Contributed by Petteri Aimonen.
+* NxWidgets::CTaskBar: Highlight the current window in the task bar.
+  Contributed by Petteri Aimonen.
+* NxWidgets/libnxwidgets/src/glyph_cycle.cxx:  Width of glyph_cycle was wrong;
+  Destructor needs to by public.  From Petteri Aimonen.
+* NxWidgets::CNumericEdit.  This is basically a label with plus and minus buttons.
+  Contributed by Petteri, Aimonen.
+* NxWM::CStartWindow:  Fix mq_receive error handling with signal is recieved.
+  From Petteri Aimonen.
+* NxWidgets::CNxTimer:  Replace the original (apparently non-functional) signal-
+  based solution with a work queue-based solution.  This raises some isses about
+  using the internal work queues from user space.  I have decided to implemented
+  user-space work queues (someday) in order to accomplish that functionaliy.
+  Submitted by Petteri Aimonen.
+* NxWidgets:CText and NxWidgets:CNumericEdite:  Fix some memory freeing bugs
+  (from Petteri Aimonen).
+* NxWidgets::CScrollingPanel:  Usability improvements.  It is borderless for now,
+  because there was no easy way to redraw only the required part of the border.
+  Contributed by Petteri Aimonen.
+* NxWidgets::CNxWidgets and NxWM::CStartWindow: Small changes to make sub-
+  classing easier (from Petteri Aimonen).
+
+1.5 2013-xx-xx Gregory Nutt <gnutt@nuttx.org>

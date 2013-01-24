@@ -291,6 +291,7 @@ bool CApplicationWindow::open(void)
   m_minimizeImage->setBorderless(true);
   m_minimizeImage->addWidgetEventHandler(this);
 #endif
+
   // The rest of the toolbar will hold the left-justified application label
   // Create the default font instance
 
@@ -365,7 +366,8 @@ void CApplicationWindow::redraw(void)
       m_stopImage->setRaisesEvents(true);
     }
 
-  // Draw the minimize image
+  // Draw the minimize image (which may not be present if this is a
+  // mimimization is disabled)
 
   if (m_minimizeImage)
     {
@@ -396,7 +398,9 @@ void CApplicationWindow::hide(void)
       m_stopImage->setRaisesEvents(false);
     }
 
-  // Disable the minimize image
+  // Disable the minimize image(which may not be present if this is a
+  // mimimization is disabled)
+
   if (m_minimizeImage)
   {
     m_minimizeImage->disableDrawing();

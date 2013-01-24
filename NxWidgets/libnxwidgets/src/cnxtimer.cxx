@@ -70,10 +70,8 @@
 /****************************************************************************
  * Included Files
  ****************************************************************************/
- 
+
 #include <nuttx/config.h>
-#include <nuttx/clock.h>
-#include <nuttx/wqueue.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -81,6 +79,9 @@
 #include <ctime>
 #include <debug.h>
 #include <errno.h>
+
+#include <nuttx/clock.h>
+#include <nuttx/wqueue.h>
 
 #include "cnxtimer.hxx"
 
@@ -118,7 +119,7 @@ CNxTimer::CNxTimer(CWidgetControl *pWidgetControl, uint32_t timeout, bool repeat
   m_isRunning  = false;
 
   // Reset the work structure
-  
+
   memset(&m_work, 0, sizeof(m_work));
 }
 
@@ -128,7 +129,6 @@ CNxTimer::CNxTimer(CWidgetControl *pWidgetControl, uint32_t timeout, bool repeat
 
 CNxTimer::~CNxTimer(void)
 {
-  
 }
 
 /**
@@ -157,13 +157,13 @@ void CNxTimer::start(void)
   if (!m_isRunning)
     {
       uint32_t ticks = m_timeout / MSEC_PER_TICK;
-      int ret = work_queue(LPWORK, &m_work, workQueueCallback, this, ticks);
-      
+      int ret = work_queue(USRWORK, &m_work, workQueueCallback, this, ticks);
+
       if (ret < 0)
         {
           gdbg("work_queue failed: %d\n", ret);
         }
-      
+
       m_isRunning = true;
     }
 }
@@ -176,13 +176,13 @@ void CNxTimer::stop(void)
 {
   if (m_isRunning)
     {
-      int ret = work_cancel(LPWORK, &m_work);
-      
+      int ret = work_cancel(USRWORK, &m_work);
+
       if (ret < 0)
         {
           gdbg("work_cancel failed: %d\n", ret);
         }
-        
+
       m_isRunning = false;
     }
 }
@@ -190,11 +190,11 @@ void CNxTimer::stop(void)
 void CNxTimer::workQueueCallback(FAR void *arg)
 {
   CNxTimer* This = (CNxTimer*)arg;
-  
+
   This->m_isRunning = false;
 
   // Raise the action event.
-  
+
   This->m_widgetEventHandlers->raiseActionEvent();
 
   // Restart the timer if this is a repeating timer

@@ -1,5 +1,5 @@
 /****************************************************************************
- * NxWidgets/libnxwidgets/include/cnumericedit.hxx
+ * NxWidgets/libnxwidgets/include/cnumericedit.cxx
  *
  *   Copyright (C) 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -71,7 +71,7 @@
 /****************************************************************************
  * Included Files
  ****************************************************************************/
- 
+
 #include <nuttx/config.h>
 
 #include <stdint.h>
@@ -90,7 +90,7 @@
 /****************************************************************************
  * Pre-Processor Definitions
  ****************************************************************************/
- 
+
 /****************************************************************************
  * CNumericEdit Method Implementations
  ****************************************************************************/
@@ -98,6 +98,7 @@
 using namespace NXWidgets;
 
 // Label that passes drag events
+
 class CDraggableLabel: public CLabel
 {
 public:
@@ -108,7 +109,7 @@ public:
   {
     setDraggable(true);
   }
-  
+
   virtual void onClick(nxgl_coord_t x, nxgl_coord_t y)
   {
     startDragging(x, y);
@@ -136,19 +137,19 @@ CNumericEdit::CNumericEdit(CWidgetControl *pWidgetControl, nxgl_coord_t x, nxgl_
   m_label = new CDraggableLabel(pWidgetControl, height, 0, width - 2 * height, height, CNxString("0"), style);
   m_label->addWidgetEventHandler(this);
   addWidget(m_label);
-  
+
   m_button_minus = new CButton(pWidgetControl, 0, 0, height, height, CNxString("-"));
   m_button_minus->addWidgetEventHandler(this);
   addWidget(m_button_minus);
-  
+
   m_button_plus = new CButton(pWidgetControl, width - height, 0, height, height, CNxString("+"));
   m_button_plus->addWidgetEventHandler(this);
   addWidget(m_button_plus);
-  
+
   m_timer = new CNxTimer(pWidgetControl, 100, true);
   m_timer->addWidgetEventHandler(this);
   addWidget(m_timer);
-  
+
   m_minimum = INT_MIN;
   m_maximum = INT_MAX;
   m_increment = 1;
@@ -158,6 +159,7 @@ CNumericEdit::CNumericEdit(CWidgetControl *pWidgetControl, nxgl_coord_t x, nxgl_
 CNumericEdit::~CNumericEdit()
 {
   // CNxWidget destroys all children
+
   m_label = 0;
   m_button_minus = 0;
   m_button_plus = 0;
@@ -165,7 +167,6 @@ CNumericEdit::~CNumericEdit()
 
 void CNumericEdit::getPreferredDimensions(CRect &rect) const
 {
-  
 }
 
 void CNumericEdit::setFont(CNxFont *font)
@@ -175,66 +176,65 @@ void CNumericEdit::setFont(CNxFont *font)
 
 void CNumericEdit::onResize(nxgl_coord_t width, nxgl_coord_t height)
 {
-  
 }
 
 void CNumericEdit::handleClickEvent(const CWidgetEventArgs &e)
 {
   if (e.getSource() == m_button_plus)
-  {
-    setValue(m_value + m_increment);
-    m_timercount = 0;
-    m_timer->start();
-  }
+    {
+      setValue(m_value + m_increment);
+      m_timercount = 0;
+      m_timer->start();
+    }
   else if (e.getSource() == m_button_minus)
-  {
-    setValue(m_value - m_increment);
-    m_timercount = 0;
-    m_timer->start();
-  }
+    {
+      setValue(m_value - m_increment);
+      m_timercount = 0;
+      m_timer->start();
+    }
 }
 
 void CNumericEdit::handleReleaseEvent(const CWidgetEventArgs &e)
 {
   if (e.getSource() == m_button_plus || e.getSource() == m_button_minus)
-  {
-    m_timer->stop();
-  }
+    {
+      m_timer->stop();
+    }
 }
 
 void CNumericEdit::handleReleaseOutsideEvent(const CWidgetEventArgs &e)
 {
   if (e.getSource() == m_button_plus || e.getSource() == m_button_minus)
-  {
-    m_timer->stop();
-  }
+    {
+      m_timer->stop();
+    }
 }
 
 void CNumericEdit::handleActionEvent(const CWidgetEventArgs &e)
 {
   if (e.getSource() == m_timer)
-  {
-    m_timercount++;
-    
-    int increment = m_increment;
-    if (m_timercount > 50)
     {
-      increment = m_increment * 100;
+      m_timercount++;
+
+      int increment = m_increment;
+      if (m_timercount > 50)
+        {
+          increment = m_increment * 100;
+        }
+      else if (m_timercount > 10)
+        {
+          increment = m_increment * 10;
+        }
+
+      if (m_button_minus->isClicked())
+        {
+          setValue(m_value - increment);
+        }
+      else if (m_button_plus->isClicked())
+        {
+          setValue(m_value + increment);
+        }
     }
-    else if (m_timercount > 10)
-    {
-      increment = m_increment * 10;
-    }
-    
-    if (m_button_minus->isClicked())
-    {
-      setValue(m_value - increment);
-    }
-    else if (m_button_plus->isClicked())
-    {
-      setValue(m_value + increment);
-    }
-  }
 }
 
 void CNumericEdit::handleDragEvent(const CWidgetEventArgs &e)
@@ -249,16 +249,16 @@ void CNumericEdit::setValue(int value)
 {
   if (value < m_minimum) value = m_minimum;
   if (value > m_maximum) value = m_maximum;
-  
+
   m_value = value;
-  
+
   char buf[10];
   snprintf(buf, sizeof(buf), "%d", m_value);
   CNxString text(buf);
-  
+
   m_label->setText(text);
-  
+
   m_widgetEventHandlers->raiseValueChangeEvent();
-  
+
   redraw();
 }

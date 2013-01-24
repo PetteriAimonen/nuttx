@@ -214,6 +214,12 @@ namespace NXWidgets
     virtual ~CCycleButton(void) { }
     
     /**
+     * Destructor.
+     */
+
+    virtual ~CCycleButton(void) { }
+    
+    /**
      * Add a new option to the widget.
      *
      * @param text The text of the option.

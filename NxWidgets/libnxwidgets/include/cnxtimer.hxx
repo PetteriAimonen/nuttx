@@ -81,6 +81,8 @@
 #include <stdbool.h>
 #include <ctime>
 
+#include <nuttx/wqueue.h>
+
 #include "cnxwidget.hxx"
 
 /****************************************************************************

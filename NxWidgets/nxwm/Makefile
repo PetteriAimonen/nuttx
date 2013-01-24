@@ -33,7 +33,6 @@
 #
 #################################################################################
 
--include $(TOPDIR)/.config
 -include $(TOPDIR)/Make.defs
 
 # Control build verbosity
@@ -45,7 +44,7 @@ export Q := @
 endif
 
 NXWMDIR := ${shell pwd | sed -e 's/ /\\ /g'}
-NXWIDGETDIR := $(NXWMDIR)/../libnxwidgets
+NXWIDGETDIR := $(NXWMDIR)$(DELIM)..$(DELIM)libnxwidgets
 
 ASRCS =
 CSRCS =
@@ -89,10 +88,10 @@ ifeq ($(WINTOOL),y)
 INCDIROPT = -w
 endif
 
-CFLAGS += ${shell $(TOPDIR)/tools/incdir.sh $(INCDIROPT) "$(CC)" $(NXWMDIR)/include}
-CFLAGS += ${shell $(TOPDIR)/tools/incdir.sh $(INCDIROPT) "$(CC)" $(NXWIDGETDIR)/include}
-CXXFLAGS += ${shell $(TOPDIR)/tools/incdir.sh $(INCDIROPT) "$(CC)" $(NXWMDIR)/include}
-CXXFLAGS += ${shell $(TOPDIR)/tools/incdir.sh $(INCDIROPT) "$(CC)" $(NXWIDGETDIR)/include}
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(NXWMDIR)$(DELIM)include}
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(NXWIDGETDIR)$(DELIM)include}
+CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(NXWMDIR)$(DELIM)include}
+CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(NXWIDGETDIR)$(DELIM)include}
 
 DEPPATH = --dep-path src
 VPATH = src
@@ -110,7 +109,7 @@ $(CXXOBJS): %$(OBJEXT): %.cxx
 	$(call COMPILEXX, $<, $@)
 
 check_nuttx:
-	@( \
+	$(Q) ( \
 		if [ -z "$(TOPDIR)" ]; then \
 			echo "The path to the nuttx directory must be provided on the command line."; \
 			echo "Usage: make -C $(NXWMDIR) TOPDIR=\"<nuttx directory>\""; \
@@ -120,7 +119,7 @@ check_nuttx:
 			echo "The nuttx directory (TOPDIR) does not exist: $(TOPDIR)"; \
 			exit 1; \
 		fi; \
-		if [ ! -f "$(TOPDIR)/.config" ]; then \
+		if [ ! -f "$(TOPDIR)$(DELIM).config" ]; then \
 			echo "The nuttx directory (TOPDIR) has not been configured"; \
 			echo "Please configure NuttX and try again"; \
 			exit 1; \
@@ -128,22 +127,21 @@ check_nuttx:
 	)
 
 $(BIN): $(OBJS)
-	@( for obj in $(OBJS) ; do \
-		$(call ARCHIVE, $@, $${obj}); \
-	done ; )
+	$(call ARCHIVE, $@, $(OBJS))
 
 .depend: Makefile $(SRCS)
-	@$(MKDEP) $(DEPPATH) $(CC) -- $(CFLAGS) -- $(SRCS) >Make.dep
-	@touch $@
+	$(Q) $(MKDEP) $(DEPPATH) $(CC) -- $(CFLAGS) -- $(SRCS) >Make.dep
+	$(Q) touch $@
 
 depend: .depend
 
 clean:
-	@rm -f $(BIN) *.a *.o *~ .*.sw*
+	$(call DELFILE, $(BIN))
 	$(call CLEAN)
 
 distclean: clean
-	@rm -f Make.dep .depend
+	$(call DELFILE, Make.dep)
+	$(call DELFILE, .depend)
 
 export: $(BIN)
 	zip -r  nxwm-export.zip include $(BIN) COPYING
