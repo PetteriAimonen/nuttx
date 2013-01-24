@@ -2,7 +2,7 @@
  * drivers/mtd/at25.c
  * Driver for SPI-based AT25DF321 (32Mbit) flash.
  *
- *   Copyright (C) 2009-2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *           Petteri Aimonen <jpa@nx.mail.kapsi.fi>
  *
@@ -58,7 +58,6 @@
  * Pre-processor Definitions
  ************************************************************************************/
 
-
 #ifndef CONFIG_AT25_SPIMODE
 #  define CONFIG_AT25_SPIMODE SPIDEV_MODE0
 #endif
@@ -96,10 +95,10 @@
 
 /* Status register bit definitions */
 
-#define AT25_SR_WIP            (1 << 0)                /* Bit 0: Write in progress bit */
-#define AT25_SR_WEL            (1 << 1)                /* Bit 1: Write enable latch bit */
-#define AT25_SR_EPE            (1 << 5)                /* Bit 5: Erase/program error */
-#define AT25_SR_UNPROT         0x00                    /* Global unprotect command */
+#define AT25_SR_WIP            (1 << 0)    /* Bit 0: Write in progress bit */
+#define AT25_SR_WEL            (1 << 1)    /* Bit 1: Write enable latch bit */
+#define AT25_SR_EPE            (1 << 5)    /* Bit 5: Erase/program error */
+#define AT25_SR_UNPROT         0x00        /* Global unprotect command */
 
 #define AT25_DUMMY     0xa5
 
@@ -310,9 +309,9 @@ static void at25_waitwritecomplete(struct at25_dev_s *priv)
 #endif
 
   if (status & AT25_SR_EPE)
-  {
-    fdbg("Write error, status: 0x%02x\n", status);
-  }
+    {
+      fdbg("Write error, status: 0x%02x\n", status);
+    }
   
   fvdbg("Complete, status: 0x%02x\n", status);
 }
@@ -477,6 +476,7 @@ static int at25_erase(FAR struct mtd_dev_s *dev, off_t startblock, size_t nblock
       at25_sectorerase(priv, startblock);
       startblock++;
     }
+
   at25_unlock(priv->dev);
   return (int)nblocks;
 }
@@ -500,6 +500,7 @@ static ssize_t at25_bread(FAR struct mtd_dev_s *dev, off_t startblock, size_t nb
     {
         return nbytes >> priv->pageshift;
     }
+
   return (int)nbytes;
 }
 
@@ -525,8 +526,8 @@ static ssize_t at25_bwrite(FAR struct mtd_dev_s *dev, off_t startblock, size_t n
       buffer += 1 << priv->pageshift;
       startblock++;
    }
-  at25_unlock(priv->dev);
 
+  at25_unlock(priv->dev);
   return nblocks;
 }
 
@@ -572,6 +573,7 @@ static ssize_t at25_read(FAR struct mtd_dev_s *dev, off_t offset, size_t nbytes,
 
   SPI_SELECT(priv->dev, SPIDEV_FLASH, false);
   at25_unlock(priv->dev);
+
   fvdbg("return nbytes: %d\n", (int)nbytes);
   return nbytes;
 }
@@ -691,6 +693,7 @@ FAR struct mtd_dev_s *at25_initialize(FAR struct spi_dev_s *dev)
         }
         
       /* Unprotect all sectors */
+
       at25_writeenable(priv);
       SPI_SELECT(priv->dev, SPIDEV_FLASH, true);
       (void)SPI_SEND(priv->dev, AT25_WRSR);

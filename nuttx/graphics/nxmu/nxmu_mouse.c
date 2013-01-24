@@ -61,9 +61,9 @@
  * Private Data
  ****************************************************************************/
 
-static struct nxgl_point_s g_mpos;
-static struct nxgl_point_s g_mrange;
-static uint8_t             g_mbutton;
+static struct nxgl_point_s   g_mpos;
+static struct nxgl_point_s   g_mrange;
+static uint8_t               g_mbutton;
 static struct nxbe_window_s *g_mwnd;
 
 /****************************************************************************
@@ -185,14 +185,15 @@ int nxmu_mousein(FAR struct nxfe_state_s *fe,
       /* Update the mouse value */
 
       oldbuttons = g_mbutton;
-      g_mpos.x  = x;
-      g_mpos.y  = y;
-      g_mbutton = buttons;
+      g_mpos.x   = x;
+      g_mpos.y   = y;
+      g_mbutton  = buttons;
 
-      /* If a button is already down, regard this as part of a mouse
-       * drag event. Pass all the following events to the window where
-       * the drag started in.
+      /* If a button is already down, regard this as part of a mouse drag
+       * event. Pass all the following events to the window where the drag
+       * started in.
        */
+
       if (oldbuttons && g_mwnd && g_mwnd->cb->mousein)
         {
           struct nxclimsg_mousein_s outmsg;
@@ -203,17 +204,16 @@ int nxmu_mousein(FAR struct nxfe_state_s *fe,
 
           return nxmu_sendclientwindow(g_mwnd, &outmsg, sizeof(struct nxclimsg_mousein_s));
         }
-      
-      /* Pick the window to receive the mouse event.  Start with
-       * the top window and go down.  Stop with the first window
-       * that gets the mouse report
+
+      /* Pick the window to receive the mouse event.  Start with the top
+       * window and go down.  Stop with the first window that gets the mouse
+       * report
        */
 
       for (wnd = fe->be.topwnd; wnd; wnd = wnd->below)
         {
-          /* The background window normally has no callback structure
-           * (unless a client has taken control of the background via
-           * nx_requestbkgd()).
+          /* The background window normally has no callback structure (unless
+           * a client has taken control of the background via nx_requestbkgd()).
            */
 
           if (wnd->cb)
@@ -225,7 +225,7 @@ int nxmu_mousein(FAR struct nxfe_state_s *fe,
                 }
             }
         }
-      
+
       g_mwnd = wnd;
     }
 

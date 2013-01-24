@@ -1,7 +1,7 @@
 /****************************************************************************
  * drivers/mtd/ftl.c
  *
- *   Copyright (C) 2009, 2011 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -229,8 +229,9 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
   remaining = nblocks;
   if (alignedblock > startblock)
     {
-      /* Check if the write is shorter than to the end of erase block */
-      bool short_write = remaining < (alignedblock - startblock);
+      /* Check if the write is shorter than to the end of the erase block */
+
+      bool short_write = (remaining < (alignedblock - startblock));
       
       /* Read the full erase block into the buffer */
 
@@ -257,12 +258,17 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
       offset = (startblock & mask) * dev->geo.blocksize;
       
       if (short_write)
-        nbytes = remaining * dev->geo.blocksize;
+        {
+          nbytes = remaining * dev->geo.blocksize;
+        }
       else
-        nbytes = dev->geo.erasesize - offset;
+        {
+          nbytes = dev->geo.erasesize - offset;
+        }
       
       fvdbg("Copy %d bytes into erase block=%d at offset=%d\n",
              nbytes, eraseblock, offset);
+
       memcpy(dev->eblock + offset, buffer, nbytes);
 
       /* And write the erase back to flash */
@@ -277,11 +283,15 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
       /* Then update for amount written */
 
       if (short_write)
-        remaining = 0;
+        {
+          remaining = 0;
+        }
       else
-        remaining -= dev->blkper - (startblock & mask);
+        {
+          remaining -= dev->blkper - (startblock & mask);
+        }
       
-      buffer    += nbytes;
+      buffer += nbytes;
     }
 
   /* How handle full erase pages in the middle */
@@ -302,6 +312,7 @@ static ssize_t ftl_flush(FAR void *priv, FAR const uint8_t *buffer,
 
       fvdbg("Write %d bytes into erase block=%d at offset=0\n",
              dev->geo.erasesize, alignedblock);
+
       nxfrd = MTD_BWRITE(dev->mtd, alignedblock, dev->blkper, buffer);
       if (nxfrd != dev->blkper)
         {

@@ -105,6 +105,7 @@ int nxtk_filltrapwindow(NXTKWINDOW hfwnd, FAR const struct nxgl_trapezoid_s *tra
 #endif
 
   /* Move the trapezoid from window contents area to window area */
+
   nxgl_trapoffset(&reltrap, trap,
                   fwnd->fwrect.pt1.x - fwnd->wnd.bounds.pt1.x,
                   fwnd->fwrect.pt1.y - fwnd->wnd.bounds.pt1.y);
