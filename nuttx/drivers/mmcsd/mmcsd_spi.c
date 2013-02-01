@@ -410,9 +410,11 @@ static uint32_t mmcsd_sendcmd(FAR struct mmcsd_slot_s *slot,
   int i;
 
   /* Wait until the card is not busy */
+  /* Note: some cards may not enter idle state until cmd0 is sent
+   * for first time. */
 
   ret = mmcsd_waitready(slot);
-  if (ret != OK)
+  if (ret != OK && cmd != &g_cmd0)
     {
       return ret;
     }
