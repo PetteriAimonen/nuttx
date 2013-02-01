@@ -378,6 +378,7 @@ static int fat_close(FAR struct file *filep)
 {
   struct inode         *inode;
   struct fat_file_s    *ff;
+  struct fat_mountpt_s *fs;
   int                   ret = OK;
 
   /* Sanity checks */
@@ -388,6 +389,7 @@ static int fat_close(FAR struct file *filep)
 
   ff    = filep->f_priv;
   inode = filep->f_inode;
+  fs    = inode->i_private;
 
   /* Do not check if the mount is healthy.  We must support closing of
    * the file even when there is healthy mount.
@@ -405,6 +407,7 @@ static int fat_close(FAR struct file *filep)
 
   if (ff->ff_buffer)
     {
+      (void)fs; /* Unused if fat_io_free == free(). */
       fat_io_free(ff->ff_buffer, fs->fs_hwsectorsize);
     }
 
