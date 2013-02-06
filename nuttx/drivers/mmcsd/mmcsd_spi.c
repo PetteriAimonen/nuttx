@@ -169,7 +169,8 @@ struct mmcsd_cmdinfo_s
 
 /* Misc *********************************************************************/
 
-static void   mmcsd_semtake(sem_t *sem);
+static void   mmcsd_semtake(sem_t *sem, FAR struct spi_dev_s *spi);
+static void   mmcsd_semgive(sem_t *sem, FAR struct spi_dev_s *spi);
 
 /* Card SPI interface *******************************************************/
 
@@ -339,8 +340,12 @@ static const struct mmcsd_cmdinfo_s g_acmd41 = {ACMD41, MMCSD_CMDRESP_R1, 0xff};
  * Name: mmcsd_semtake
  ****************************************************************************/
 
-static void mmcsd_semtake(sem_t *sem)
+static void mmcsd_semtake(sem_t *sem, FAR struct spi_dev_s *spi)
 {
+#ifndef CONFIG_SPI_OWNBUS
+  (void)SPI_LOCK(spi, true);
+#endif
+  
   while (sem_wait(sem) != 0)
     {
       /* The only case that an error should occur here is if the wait was
@@ -351,8 +356,15 @@ static void mmcsd_semtake(sem_t *sem)
     }
 }
 
-#define mmcsd_semgive(sem) sem_post(sem)
-
+static void mmcsd_semgive(sem_t *sem, FAR struct spi_dev_s *spi)
+{
+  sem_post(sem);
+  
+#ifndef CONFIG_SPI_OWNBUS
+  (void)SPI_LOCK(spi, false);
+#endif
+}
+  
 /****************************************************************************
  * Name: mmcsd_waitready
  *
@@ -1003,7 +1015,7 @@ static int mmcsd_open(FAR struct inode *inode)
   /* Verify that an MMC/SD card has been inserted */
 
   ret = -ENODEV;
-  mmcsd_semtake(&slot->sem);
+  mmcsd_semtake(&slot->sem, spi);
   if ((SPI_STATUS(spi, SPIDEV_MMCSD) & SPI_STATUS_PRESENT) != 0)
     {
       /* Yes.. a card is present.  Has it been initialized? */
@@ -1028,7 +1040,7 @@ static int mmcsd_open(FAR struct inode *inode)
     }
 
 errout_with_sem:
-  mmcsd_semgive(&slot->sem);
+  mmcsd_semgive(&slot->sem, spi);
   return ret;
 }
 
@@ -1122,7 +1134,7 @@ static ssize_t mmcsd_read(FAR struct inode *inode, unsigned char *buffer,
 
   /* Select the slave */
 
-  mmcsd_semtake(&slot->sem);
+  mmcsd_semtake(&slot->sem, spi);
   SPI_SELECT(spi, SPIDEV_MMCSD, true);
 
   /* Single or multiple block read? */
@@ -1182,7 +1194,7 @@ static ssize_t mmcsd_read(FAR struct inode *inode, unsigned char *buffer,
 
   SPI_SELECT(spi, SPIDEV_MMCSD, false);
   SPI_SEND(spi, 0xff);
-  mmcsd_semgive(&slot->sem);
+  mmcsd_semgive(&slot->sem, spi);
 
   fvdbg("Read %d bytes:\n", nbytes);
   mmcsd_dumpbuffer("Read buffer", buffer, nbytes);
@@ -1190,7 +1202,7 @@ static ssize_t mmcsd_read(FAR struct inode *inode, unsigned char *buffer,
 
 errout_with_eio:
   SPI_SELECT(spi, SPIDEV_MMCSD, false);
-  mmcsd_semgive(&slot->sem);
+  mmcsd_semgive(&slot->sem, spi);
   return -EIO;
 }
 
@@ -1283,7 +1295,7 @@ static ssize_t mmcsd_write(FAR struct inode *inode, const unsigned char *buffer,
 
   /* Select the slave */
 
-  mmcsd_semtake(&slot->sem);
+  mmcsd_semtake(&slot->sem, spi);
   SPI_SELECT(spi, SPIDEV_MMCSD, true);
 
   /* Single or multiple block transfer? */
@@ -1354,7 +1366,7 @@ static ssize_t mmcsd_write(FAR struct inode *inode, const unsigned char *buffer,
   ret = mmcsd_waitready(slot);
   SPI_SELECT(spi, SPIDEV_MMCSD, false);
   SPI_SEND(spi, 0xff);
-  mmcsd_semgive(&slot->sem);
+  mmcsd_semgive(&slot->sem, spi);
 
   /* The success return value is the number of sectors written */
 
@@ -1362,7 +1374,7 @@ static ssize_t mmcsd_write(FAR struct inode *inode, const unsigned char *buffer,
 
 errout_with_sem:
   SPI_SELECT(spi, SPIDEV_MMCSD, false);
-  mmcsd_semgive(&slot->sem);
+  mmcsd_semgive(&slot->sem, spi);
   return -EIO;
 }
 #endif
@@ -1411,14 +1423,14 @@ static int mmcsd_geometry(FAR struct inode *inode, struct geometry *geometry)
 
   /* Re-sample the CSD */
 
-  mmcsd_semtake(&slot->sem);
+  mmcsd_semtake(&slot->sem, spi);
   SPI_SELECT(spi, SPIDEV_MMCSD, true);
   ret = mmcsd_getcsd(slot, csd);
   SPI_SELECT(spi, SPIDEV_MMCSD, false);
 
   if (ret < 0)
     {
-      mmcsd_semgive(&slot->sem);
+      mmcsd_semgive(&slot->sem, spi);
       fdbg("mmcsd_getcsd returned %d\n", ret);
       return ret;
     }
@@ -1447,7 +1459,7 @@ static int mmcsd_geometry(FAR struct inode *inode, struct geometry *geometry)
    */
 
   slot->state &= ~MMCSD_SLOTSTATUS_MEDIACHGD;
-  mmcsd_semgive(&slot->sem);
+  mmcsd_semgive(&slot->sem, spi);
 
   fvdbg("geo_available:     %d\n", geometry->geo_available);
   fvdbg("geo_mediachanged:  %d\n", geometry->geo_mediachanged);
@@ -1468,6 +1480,8 @@ static int mmcsd_geometry(FAR struct inode *inode, struct geometry *geometry)
  * Description:
  *   Detect media and initialize
  *
+ * Precondition:
+ *   Semaphore has been taken.
  ****************************************************************************/
 
 static int mmcsd_mediainitialize(FAR struct mmcsd_slot_s *slot)
@@ -1549,6 +1563,8 @@ static int mmcsd_mediainitialize(FAR struct mmcsd_slot_s *slot)
     {
       fdbg("Send CMD0 failed: R1=%02x\n", result);
       SPI_SELECT(spi, SPIDEV_MMCSD, false);
+      
+      mmcsd_semgive(&slot->sem, spi);
       return -EIO;
     }
 
@@ -1670,6 +1686,7 @@ static int mmcsd_mediainitialize(FAR struct mmcsd_slot_s *slot)
         {
           fdbg("Failed to exit IDLE state\n");
           SPI_SELECT(spi, SPIDEV_MMCSD, false);
+          mmcsd_semgive(&slot->sem, spi);
           return -EIO;
         }
     }
@@ -1678,6 +1695,7 @@ static int mmcsd_mediainitialize(FAR struct mmcsd_slot_s *slot)
     {
       fdbg("Failed to identify card\n");
       SPI_SELECT(spi, SPIDEV_MMCSD, false);
+      mmcsd_semgive(&slot->sem, spi);
       return -EIO;
     }
 
@@ -1689,6 +1707,7 @@ static int mmcsd_mediainitialize(FAR struct mmcsd_slot_s *slot)
     {
       fdbg("mmcsd_getcsd(CMD9) failed: %d\n", result);
       SPI_SELECT(spi, SPIDEV_MMCSD, false);
+      mmcsd_semgive(&slot->sem, spi);
       return -EIO;
     }
   mmcsd_dmpcsd(csd, slot->type);
@@ -1760,7 +1779,7 @@ static void mmcsd_mediachanged(void *arg)
 
   /* Save the current slot state and reassess the new state */
 
-  mmcsd_semtake(&slot->sem);
+  mmcsd_semtake(&slot->sem, spi);
   oldstate = slot->state;
 
   /* Check if media was removed or inserted */
@@ -1796,6 +1815,8 @@ static void mmcsd_mediachanged(void *arg)
           slot->state |= MMCSD_SLOTSTATUS_MEDIACHGD;
         }
     }
+  
+  mmcsd_semgive(&slot->sem, spi);
 }
 
 /****************************************************************************
@@ -1852,8 +1873,9 @@ int mmcsd_spislotinitialize(int minor, int slotno, FAR struct spi_dev_s *spi)
   slot->spi = spi;
 
   /* Ininitialize for the media in the slot (if any) */
-
+  mmcsd_semtake(&slot->sem, spi);
   ret = mmcsd_mediainitialize(slot);
+  mmcsd_semgive(&slot->sem, spi);
   if (ret == 0)
     {
       fvdbg("mmcsd_mediainitialize returned OK\n");
