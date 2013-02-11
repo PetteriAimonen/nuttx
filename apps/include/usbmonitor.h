@@ -1,10 +1,8 @@
 /****************************************************************************
- * apps/namedaps/namedapp.h
+ * apps/include/usbmonitor.h
  *
- *   Copyright (C) 2011 Uros Platise. All rights reserved.
- *   Copyright (C) 2011-2012 Gregory Nutt. All rights reserved.
- *   Authors: Uros Platise <uros.platise@isotel.eu>
- *            Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright (C) 2013 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -35,44 +33,64 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NAMEDAPP_NAMEDAPP_H
-#define __APPS_NAMEDAPP_NAMEDAPP_H
+#ifndef __APPS_INCLUDE_USBMONITOR_H
+#define __APPS_INCLUDE_USBMONITOR_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <apps/apps.h>
+
+#ifdef CONFIG_SYSTEM_USBMONITOR
 
 /****************************************************************************
- * Public Types
+ * Pre-Processor Definitions
  ****************************************************************************/
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-#undef EXTERN
-#if defined(__cplusplus)
+#ifdef __cplusplus
 #define EXTERN extern "C"
-extern "C" {
+extern "C" 
+{
 #else
 #define EXTERN extern
 #endif
 
-EXTERN const struct namedapp_s namedapps[];
-
 /****************************************************************************
- * Public Functions
+ * Public Function Prototypes
  ****************************************************************************/
 
-EXTERN int number_namedapps(void);
+/****************************************************************************
+ * Name: usbmon_start and usbmon_stop
+ *
+ *   Start and top the USB monitor daemon.  These are normally controlled
+ *   from the USB command line, but the ability to control these
+ *   programmatically is also helpful (for example, so that the daemon is
+ *   running before NSH starts).
+ *
+ * Input Parameters:
+ *   Standard task parameters.  These can be called or spawned.  Since the
+ *   return almost immediately, it is fine to just call the functions.  The
+ *   parameters are not used so you can pass 0 and NULL, respectivley; this
+ *   is done this way so that these functions can be NSH builtin
+ *   applications.
+ *
+ * Returned values:
+ *   Standard task return values (zero meaning success).
+ *
+ **************************************************************************/
+
+int usbmonitor_start(int argc, char **argv);
+int usbmonitor_stop(int argc, char **argv);
 
 #undef EXTERN
-#if defined(__cplusplus)
+#ifdef __cplusplus
 }
 #endif
 
-#endif /* __APPS_NAMEDAPP_NAMEDAPP_H */
-
+#endif /* CONFIG_SYSTEM_USBMONITOR */
+#endif /* __APPS_INCLUDE_USBMONITOR_H */

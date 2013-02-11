@@ -1,8 +1,7 @@
 ############################################################################
-# apps/namedapps/Make.defs
-# Adds selected applications to apps/ build
+# examples/posix_spawn/filesystem/redirect/Makefile
 #
-#   Copyright (C) 2012 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2013 Gregory Nutt. All rights reserved.
 #   Author: Gregory Nutt <gnutt@nuttx.org>
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,7 +33,27 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_NAMEDAPP),y)
-CONFIGURED_APPS += namedapp
-endif
+-include $(TOPDIR)/Make.defs
 
+BIN = redirect
+
+SRCS = $(BIN).c
+OBJS = $(SRCS:.c=.o)
+
+all: $(BIN)
+
+$(OBJS): %.o: %.c
+	@echo "CC: $<"
+	$(Q) $(CC) -c $(CELFFLAGS) $< -o $@
+
+$(BIN): $(OBJS)
+	@echo "LD: $<"
+	$(Q) $(LD) $(LDELFFLAGS) -o $@ $^
+
+clean: 
+	$(call DELFILE, $(BIN))
+	$(call CLEAN)
+
+install:
+	$(Q) mkdir -p $(ROMFS_DIR)
+	$(Q) install --mode=0755 $(BIN) $(ROMFS_DIR)/$(BIN)

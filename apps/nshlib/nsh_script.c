@@ -1,13 +1,8 @@
 /****************************************************************************
- * apps/namedaps/exec_namedapp.c
+ * apps/nshlib/nsh_script.c
  *
- *   Copyright (C) 2011 Uros Platise. All rights reserved.
- *   Author: Uros Platise <uros.platise@isotel.eu>
- *
- * With updates, modifications, and general maintenance by:
- *
- *   Copyright (C) 2012 Gregory Nutt.  All rights reserved.
- *   Auther: Gregory Nutt <gnutt@nuttx.org>
+ *   Copyright (C) 2007-2009, 2011-2013 Gregory Nutt. All rights reserved.
+ *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,13 +38,15 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <apps/apps.h>
-#include <sched.h>
 
-#include <string.h>
-#include <errno.h>
+#include "nsh.h"
+#include "nsh_console.h"
 
-#include "namedapp.h"
+#if  CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_NFILE_STREAMS > 0 && !defined(CONFIG_NSH_DISABLESCRIPT)
+
+/****************************************************************************
+ * Definitions
+ ****************************************************************************/
 
 /****************************************************************************
  * Private Types
@@ -64,6 +61,10 @@
  ****************************************************************************/
 
 /****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -72,116 +73,123 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: namedapp_getname
+ * Name: nsh_script
  *
  * Description:
- *   Return the name of the application at index in the table of named
- *   applications.
+ *   Execute the NSH script at path.
  *
  ****************************************************************************/
 
-const char *namedapp_getname(int index)
+int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
+               FAR const char *path)
 {
-  if (index < 0 || index >= number_namedapps())
-   {
-     return NULL;
-   }
-    
-  return namedapps[index].name;
-}
- 
-/****************************************************************************
- * Name: namedapp_isavail
- *
- * Description:
- *   Return the index into the table of applications for the applicaiton with
- *   the name 'appname'.
- *
- ****************************************************************************/
+  char *fullpath;
+  FILE *stream;
+  char *buffer;
+  char *pret;
+  int ret = ERROR;
 
-int namedapp_isavail(FAR const char *appname)
-{
-  int i;
-    
-  for (i = 0; namedapps[i].name; i++) 
+  /* The path to the script may be relative to the current working directory */
+
+  fullpath = nsh_getfullpath(vtbl, path);
+  if (!fullpath)
     {
-      if (!strcmp(namedapps[i].name, appname))
-        {
-          return i;
-        }
+      return ERROR;
     }
 
-  set_errno(ENOENT);
-  return ERROR;
+  /* Get a reference to the common input buffer */
+
+  buffer = nsh_linebuffer(vtbl);
+  if (buffer)
+    {
+      /* Open the file containing the script */
+
+      stream = fopen(fullpath, "r");
+      if (!stream)
+        {
+          nsh_output(vtbl, g_fmtcmdfailed, cmd, "fopen", NSH_ERRNO);
+          nsh_freefullpath(fullpath);
+          return ERROR;
+        }
+
+      /* Loop, processing each command line in the script file (or
+       * until an error occurs)
+       */
+
+      do
+        {
+          /* Get the next line of input from the file */
+
+          fflush(stdout);
+          pret = fgets(buffer, CONFIG_NSH_LINELEN, stream);
+          if (pret)
+            {
+              /* Parse process the command.  NOTE:  this is recursive...
+               * we got to cmd_sh via a call to nsh_parse.  So some
+               * considerable amount of stack may be used.
+               */
+
+              ret = nsh_parse(vtbl, buffer);
+            }
+        }
+      while (pret && ret == OK);
+      fclose(stream);
+    }
+
+  nsh_freefullpath(fullpath);
+  return ret;
 }
- 
+
 /****************************************************************************
- * Name: namedapp_isavail
+ * Name: nsh_initscript
  *
  * Description:
- *   Execute the application with name 'appname', providing the arguments
- *   in the argv[] array.
- *
- * Returned Value:
- *   On success, the task ID of the named application is returned.  On
- *   failure, -1 (ERROR) is returned an the errno value is set appropriately.
+ *   Attempt to execute the configured initialization script.  This script
+ *   should be executed once when NSH starts.  nsh_initscript is idempotent
+ *   and may, however, be called multiple times (the script will be executed
+ *   once.
  *
  ****************************************************************************/
 
-int exec_namedapp(FAR const char *appname, FAR const char **argv)
+#ifdef CONFIG_NSH_ROMFSETC
+int nsh_initscript(FAR struct nsh_vtbl_s *vtbl)
 {
-  pid_t pid;
-  int index;
+  static bool initialized;
+  bool already;
+  int ret = OK;
 
-  /* Verify that an application with this name exists */
+  /* Atomic test and set of the initialized flag */
 
-  index = namedapp_isavail(appname);
-  if (index >= 0)
+  sched_lock();
+  already     = initialized;
+  initialized = true;
+  sched_unlock();
+
+  /* If we have not already executed the init script, then do so now */
+
+  if (!already)
     {
-      /* Disable pre-emption.  This means that although we start the named
-       * application here, it will not actually run until pre-emption is
-       * re-enabled below.
-       */
+      ret = nsh_script(vtbl, "init", NSH_INITPATH);
+    }
 
-      sched_lock();
+  return ret;
+}
 
-      /* Start the named application task */
+/****************************************************************************
+ * Name: nsh_loginscript
+ *
+ * Description:
+ *   Attempt to execute the configured login script.  This script
+ *   should be executed when each NSH session starts.
+ *
+ ****************************************************************************/
 
-      pid = TASK_CREATE(namedapps[index].name, namedapps[index].priority, 
-                        namedapps[index].stacksize, namedapps[index].main, 
-                        (argv) ? &argv[1] : (const char **)NULL);
-
-      /* If robin robin scheduling is enabled, then set the scheduling policy
-       * of the new task to SCHED_RR before it has a chance to run.
-       */
-
-#if CONFIG_RR_INTERVAL > 0
-      if (pid > 0)
-        {
-          struct sched_param param;
-
-          /* Pre-emption is disabled so the task creation and the
-           * following operation will be atomic.  The priority of the
-           * new task cannot yet have changed from its initial value.
-           */
-
-          param.sched_priority = namedapps[index].priority;
-          sched_setscheduler(pid, SCHED_RR, &param);
-        }
+#ifdef CONFIG_NSH_ROMFSRC
+int nsh_loginscript(FAR struct nsh_vtbl_s *vtbl)
+{
+  return nsh_script(vtbl, "login", NSH_RCPATH);
+}
 #endif
-      /* Now let the named application run */
+#endif /* CONFIG_NSH_ROMFSETC */
 
-      sched_unlock();
-
-      /* Return the task ID of the new task if the task was sucessfully
-       * started.  Otherwise, pid will be ERROR (and the errno value will
-       * be set appropriately).
-       */
-
-      return pid;
-    }
-
-  /* Return ERROR with errno set appropriately */
-
-  return ERROR;
-}
+#endif /* CONFIG_NFILE_DESCRIPTORS > 0 && CONFIG_NFILE_STREAMS > 0 && !CONFIG_NSH_DISABLESCRIPT */
