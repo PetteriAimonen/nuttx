@@ -48,6 +48,7 @@
  ************************************************************************************/
 
 /* Maximum allowed speed as per specifications for all SPIs */
+
 #if defined(CONFIG_STM32_STM32F40XX)
 #  define STM32_SPI_CLK_MAX     37500000UL
 #else

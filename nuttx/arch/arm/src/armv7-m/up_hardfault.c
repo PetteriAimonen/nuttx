@@ -1,7 +1,7 @@
 /****************************************************************************
  * arch/arm/src/armv7-m/up_hardfault.c
  *
- *   Copyright (C) 2009 Gregory Nutt. All rights reserved.
+ *   Copyright (C) 2009, 2013 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,7 +55,9 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Debug output from this file may interfere with context switching! */
+/* If CONFIG_ARMV7M_USEBASEPRI=n, then debug output from this file may
+ * interfere with context switching!
+ */
 
 #ifdef CONFIG_DEBUG_HARDFAULT
 # define hfdbg(format, arg...) lldbg(format, ##arg)
@@ -92,18 +94,19 @@
 
 int up_hardfault(int irq, FAR void *context)
 {
+#if defined(CONFIG_DEBUG_HARDFAULT) || !defined(CONFIG_ARMV7M_USEBASEPRI)
   uint32_t *regs = (uint32_t*)context;
-  uint16_t *pc;
-  uint16_t insn;
+#endif
 
   /* Get the value of the program counter where the fault occurred */
 
-  pc = (uint16_t*)regs[REG_PC] - 1;
+#ifndef CONFIG_ARMV7M_USEBASEPRI
+  uint16_t *pc = (uint16_t*)regs[REG_PC] - 1;
   if ((void*)pc >= (void*)&_stext && (void*)pc < (void*)&_etext)
     {
       /* Fetch the instruction that caused the Hard fault */
 
-      insn = *pc;
+      uint16_t insn = *pc;
       hfdbg("  PC: %p INSN: %04x\n", pc, insn);
 
       /* If this was the instruction 'svc 0', then forward processing
@@ -116,24 +119,31 @@ int up_hardfault(int irq, FAR void *context)
           return up_svcall(irq, context);
         }
     }
+#endif
 
   /* Dump some hard fault info */
 
-  lldbg("\nHard Fault:\n");
-  lldbg("  IRQ: %d regs: %p\n", irq, regs);
-  lldbg("  BASEPRI: %08x PRIMASK: %08x IPSR: %08x\n",
+  hfdbg("\nHard Fault:\n");
+  hfdbg("  IRQ: %d regs: %p\n", irq, regs);
+  hfdbg("  BASEPRI: %08x PRIMASK: %08x IPSR: %08x\n",
         getbasepri(), getprimask(), getipsr());
-  lldbg("  CFAULTS: %08x HFAULTS: %08x DFAULTS: %08x BFAULTADDR: %08x AFAULTS: %08x\n",
+  hfdbg("  CFAULTS: %08x HFAULTS: %08x DFAULTS: %08x BFAULTADDR: %08x AFAULTS: %08x\n",
         getreg32(NVIC_CFAULTS), getreg32(NVIC_HFAULTS),
         getreg32(NVIC_DFAULTS), getreg32(NVIC_BFAULT_ADDR),
         getreg32(NVIC_AFAULTS));
-  lldbg("  R0: %08x %08x %08x %08x %08x %08x %08x %08x\n",
+  hfdbg("  R0: %08x %08x %08x %08x %08x %08x %08x %08x\n",
         regs[REG_R0],  regs[REG_R1],  regs[REG_R2],  regs[REG_R3],
         regs[REG_R4],  regs[REG_R5],  regs[REG_R6],  regs[REG_R7]);
-  lldbg("  R8: %08x %08x %08x %08x %08x %08x %08x %08x\n",
+  hfdbg("  R8: %08x %08x %08x %08x %08x %08x %08x %08x\n",
         regs[REG_R8],  regs[REG_R9],  regs[REG_R10], regs[REG_R11],
         regs[REG_R12], regs[REG_R13], regs[REG_R14], regs[REG_R15]);
-  lldbg("  PSR=%08x\n", regs[REG_XPSR]);
+#ifdef CONFIG_ARMV7M_USEBASEPRI
+  hfdbg("  xPSR: %08x BASEPRI: %08x (saved)\n",
+        current_regs[REG_XPSR],  current_regs[REG_BASEPRI]);
+#else
+  hfdbg("  xPSR: %08x PRIMASK: %08x (saved)\n",
+        current_regs[REG_XPSR],  current_regs[REG_PRIMASK]);
+#endif
 
   (void)irqsave();
   lldbg("PANIC!!! Hard fault: %08x\n", getreg32(NVIC_HFAULTS));

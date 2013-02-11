@@ -406,7 +406,7 @@ mkfatfs_clustersearchlimits(FAR struct fat_format_s *fmt, FAR struct fat_var_s *
 }
 
 /****************************************************************************
- * Name:  mkfatfs_try12
+ * Name:  mkfatfs_tryfat12
  *
  * Description:
  *   Try to define a FAT12 filesystem on the device using the candidate
@@ -472,7 +472,7 @@ mkfatfs_tryfat12(FAR struct fat_format_s *fmt, FAR struct fat_var_s *var,
 }
  
 /****************************************************************************
- * Name:  mkfatfs_try16
+ * Name:  mkfatfs_tryfat16
  *
  * Description:
  *   Try to define a FAT16 filesystem on the device using the candidate
@@ -543,7 +543,7 @@ mkfatfs_tryfat16(FAR struct fat_format_s *fmt, FAR struct fat_var_s *var,
 }
 
 /****************************************************************************
- * Name:  mkfatfs_try32
+ * Name:  mkfatfs_tryfat32
  *
  * Description:
  *   Try to define a FAT32 filesystem on the device using the candidate
