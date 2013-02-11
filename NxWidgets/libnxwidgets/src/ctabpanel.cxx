@@ -67,24 +67,25 @@ CTabPanel::CTabPanel(CWidgetControl *pWidgetControl, uint8_t numPages,
   CNxWidget(pWidgetControl, x, y, width, height, 0, style)
 {
   m_buttonbar = new CLatchButtonArray(pWidgetControl, x, y,
-                                       numPages, 1,
-                                       width / numPages,
-                                       buttonHeight,
-                                       0);
+                                      numPages, 1,
+                                      width / numPages,
+                                      buttonHeight,
+                                      0);
   m_buttonbar->addWidgetEventHandler(this);
   this->addWidget(m_buttonbar);
   
   for (int i = 0; i < numPages; i++)
-  {
-    CNxWidget *tabpage = new CNxWidget(pWidgetControl, x, y + buttonHeight,
-                                    width, height - buttonHeight, 0);
-    tabpage->setBackgroundColor(getBackgroundColor());
-    tabpage->setBorderless(true);
-    m_tabpages.push_back(tabpage);
-    this->addWidget(tabpage);
-  }
+    {
+      CNxWidget *tabpage = new CNxWidget(pWidgetControl, x, y + buttonHeight,
+                                         width, height - buttonHeight, 0);
+      tabpage->setBackgroundColor(getBackgroundColor());
+      tabpage->setBorderless(true);
+      m_tabpages.push_back(tabpage);
+      this->addWidget(tabpage);
+    }
   
   // Activate the first page
+
   showPage(0);
 }
 
@@ -96,34 +97,36 @@ void CTabPanel::setPageName(uint8_t index, const CNxString &name)
 void CTabPanel::showPage(uint8_t index)
 {
   if (!m_buttonbar->isThisButtonStuckDown(index, 0))
-  {
-    m_buttonbar->stickDown(index, 0);
-  }
+    {
+      m_buttonbar->stickDown(index, 0);
+    }
   
   for (int i = 0; i < m_tabpages.size(); i++)
-  {
-    if (i == index)
     {
-      m_tabpages.at(i)->enable();
-      m_tabpages.at(i)->show();
-      m_tabpages.at(i)->redraw();
+      if (i == index)
+        {
+          m_tabpages.at(i)->enable();
+          m_tabpages.at(i)->show();
+          m_tabpages.at(i)->redraw();
+        }
+      else
+        {
+          m_tabpages.at(i)->hide();
+          m_tabpages.at(i)->disable();
+        }
     }
-    else
-    {
-      m_tabpages.at(i)->hide();
-      m_tabpages.at(i)->disable();
-    }
-  }
 }
 
 void CTabPanel::handleActionEvent(const CWidgetEventArgs &e)
 {
   if (e.getSource() == m_buttonbar)
-  {
-    int x = 0, y = 0;
-    m_buttonbar->isAnyButtonStuckDown(x, y);
-    showPage(x);
-  }
+    {
+      int x = 0;
+      int y = 0;
+
+      m_buttonbar->isAnyButtonStuckDown(x, y);
+      showPage(x);
+    }
 }
 
 

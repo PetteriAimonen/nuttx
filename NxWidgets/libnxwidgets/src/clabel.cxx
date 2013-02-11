@@ -301,12 +301,20 @@ void CLabel::drawContents(CGraphicsPort *port)
       backColor = getBackgroundColor();
     }
 
+  // Draw the background (excluding the border)
+
+#ifdef CONFIG_NXWIDGETS_FLICKERFREE
+  port->drawFilledRect(rect.getX(), rect.getY(),
+                       rect.getWidth(), rect.getHeight(), backColor);
+#endif
+
   // Get the X/Y position of the text within the Label
 
   struct nxgl_point_s pos;
   pos.x = rect.getX() + m_align.x;
   pos.y = rect.getY() + m_align.y;
 
+#ifdef CONFIG_NXWIDGETS_FLICKERFREE
   CNxFont* font = getFont();
   int height = font->getHeight();
   int width = font->getStringWidth(m_text);
@@ -321,7 +329,8 @@ void CLabel::drawContents(CGraphicsPort *port)
                        width, pos.y - rect.getY(), backColor); // Top
   port->drawFilledRect(pos.x, pos.y + height,
                        width, rect.getY2() - (pos.y + height) + 1, backColor); // Bottom
-  
+#endif
+
   // Add the text using the selected color and background color
 
   port->drawText(&pos, &rect, getFont(), m_text, 0, m_text.getLength(),

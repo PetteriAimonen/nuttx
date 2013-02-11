@@ -33,7 +33,6 @@
  *
  ****************************************************************************/
 
-
 #ifndef __INCLUDE_CTABPANEL_HXX
 #define __INCLUDE_CTABPANEL_HXX
 

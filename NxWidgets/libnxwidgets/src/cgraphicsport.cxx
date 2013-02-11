@@ -671,9 +671,11 @@ void CGraphicsPort::drawText(struct nxgl_point_s *pos, CRect *bound,
  * @param background Background color
  */
 
-void CGraphicsPort::drawText(struct nxgl_point_s *pos, CRect *bound, CNxFont *font,
-            const CNxString &string, int startIndex, int length,
-            nxgl_mxpixel_t color, nxgl_mxpixel_t background)
+void CGraphicsPort::drawText(struct nxgl_point_s *pos, CRect *bound,
+                             CNxFont *font, const CNxString &string,
+                             int startIndex, int length,
+                             nxgl_mxpixel_t color,
+                             nxgl_mxpixel_t background)
 {
   nxgl_mxpixel_t savedColor = font->getColor();
   font->setColor(color);
@@ -695,9 +697,12 @@ void CGraphicsPort::drawText(struct nxgl_point_s *pos, CRect *bound, CNxFont *fo
  * @param background Color to use for background if transparent is false.
  * @param transparent Whether to fill the background.
  */
-void CGraphicsPort::_drawText(struct nxgl_point_s *pos, CRect *bound, CNxFont *font,
-                  const CNxString &string, int startIndex, int length,
-                  nxgl_mxpixel_t background, bool transparent)
+
+void CGraphicsPort::_drawText(struct nxgl_point_s *pos, CRect *bound,
+                              CNxFont *font, const CNxString &string,
+                              int startIndex, int length,
+                              nxgl_mxpixel_t background,
+                              bool transparent)
 {
   // Verify index and length
 
@@ -717,6 +722,7 @@ void CGraphicsPort::_drawText(struct nxgl_point_s *pos, CRect *bound, CNxFont *f
   if (transparent)
     {
       // Can't render transparently without reading memory.
+
       transparent = false;
       background = m_backColor;
     }
@@ -794,6 +800,7 @@ void CGraphicsPort::_drawText(struct nxgl_point_s *pos, CRect *bound, CNxFont *f
               if (!transparent)
                 {
                   // Set the glyph memory to the background color
+
                   nxwidget_pixel_t *bmPtr   = (nxwidget_pixel_t *)bitmap.data;
                   unsigned int      npixels = fontWidth * bmHeight;
                   for (unsigned int j = 0; j < npixels; j++)
@@ -804,6 +811,7 @@ void CGraphicsPort::_drawText(struct nxgl_point_s *pos, CRect *bound, CNxFont *f
               else
                 {
                   // Read the current contents of the destination into the glyph memory
+
                   m_pNxWnd->getRectangle(&dest, &bitmap);
                 }
 
