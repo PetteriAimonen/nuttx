@@ -482,7 +482,7 @@ struct stm32_ep_s
   struct stm32_req_s    *tail;
   uint8_t                epphy;        /* Physical EP address */
   uint8_t                eptype:2;     /* Endpoint type */
-  uint8_t                configured:1; /* 1: Endpoint has been configured */
+  uint8_t                configured:1; /* 1: Endpoint has been configured (not used) */
   uint8_t                active:1;     /* 1: A request is being processed */
   uint8_t                stalled:1;    /* 1: Endpoint is stalled */
   uint8_t                isin:1;       /* 1: IN Endpoint */
@@ -1879,13 +1879,6 @@ static struct stm32_ep_s *stm32_ep_findbyaddr(struct stm32_usbdev_s *priv,
   else
     {
       privep = &priv->epout[epphy];
-    }
-
-  /* Verify that the endpoint has been configured */
-
-  if (!privep->configured)
-    {
-      return NULL;
     }
 
   /* Return endpoint reference */
