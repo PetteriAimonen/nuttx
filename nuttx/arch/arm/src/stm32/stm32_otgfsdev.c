@@ -4428,19 +4428,6 @@ static int stm32_epin_setstall(FAR struct stm32_ep_s *privep)
   regaddr = STM32_OTGFS_DIEPCTL(privep->epphy);
   regval  = stm32_getreg(regaddr);
 
-  /* Is the endpoint enabled? */
-
-  if ((regval & OTGFS_DIEPCTL_EPENA) != 0)
-    {
-      /* Yes.. the endpoint is enabled, disable it */
-
-      regval = OTGFS_DIEPCTL_EPDIS;
-    }
-  else
-    {
-      regval = 0;
-    }
-
   /* Then stall the endpoint */
 
   regval |= OTGFS_DIEPCTL_STALL;
