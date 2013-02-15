@@ -3148,6 +3148,11 @@ static inline void stm32_rxinterrupt(FAR struct stm32_usbdev_s *priv)
         datlen = GETUINT16(priv->ctrlreq.len);
         if (USB_REQ_ISOUT(priv->ctrlreq.type) && datlen > 0)
           {
+            /* Clear NAKSTS so that we can receive the data */
+            regval  = stm32_getreg(STM32_OTGFS_DOEPCTL0);
+            regval |= OTGFS_DOEPCTL0_CNAK;
+            stm32_putreg(regval, STM32_OTGFS_DOEPCTL0);
+            
             /* Wait for the data phase. */
 
             priv->ep0state = EP0STATE_SETUP_OUT;
