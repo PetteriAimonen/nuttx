@@ -65,6 +65,25 @@
  * Private Functions
  ****************************************************************************/
 
+#ifdef CONFIG_USBDEV_TRACE_STRINGS
+
+static const char *get_string(const struct trace_msg_t *array, int id)
+{
+  const struct trace_msg_t *p = array;
+  while (p->str != NULL)
+    {
+      if (p->id == id)
+        {
+          return p->str;
+        }
+      p++;
+    }
+  
+  return "???";
+}
+
+#endif
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -209,7 +228,13 @@ void usbtrace_trprintf(trprintf_t trprintf, uint16_t event, uint16_t value)
           break;
 
         case TRACE_INTDECODE_ID:       /* Decoded interrupt event */
+#ifdef CONFIG_USBDEV_TRACE_STRINGS
+          trprintf("Interrupt decode %3d: %-40s %04x\n", TRACE_DATA(event),
+                   get_string(g_usb_trace_strings_intdecode, TRACE_DATA(event)),
+                   value);
+#else
           trprintf("Interrupt decode %d: %04x\n", TRACE_DATA(event), value);
+#endif
           break;
 
         case TRACE_INTEXIT_ID:         /* Interrupt handler exit */
@@ -237,7 +262,13 @@ void usbtrace_trprintf(trprintf_t trprintf, uint16_t event, uint16_t value)
           break;
 
         case TRACE_DEVERROR_ID:        /* USB controller driver error event */
+#ifdef CONFIG_USBDEV_TRACE_STRINGS
+          trprintf("Controller error: %02x: %-40s %04x\n", TRACE_DATA(event),
+                   get_string(g_usb_trace_strings_deverror, TRACE_DATA(event)),
+                   value);
+#else
           trprintf("Controller error: %02x:%04x\n", TRACE_DATA(event), value);
+#endif
           break;
 
         case TRACE_CLSERROR_ID:        /* USB class driver error event */

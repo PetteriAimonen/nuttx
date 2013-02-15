@@ -174,6 +174,25 @@
 
 #define TRACE_CLSERROR(id)       TRACE_EVENT(TRACE_CLSERROR_ID, id)
 
+/* Event string descriptions ****************************************/
+/* Macros for defining the string arrays for display of the traces. */
+#ifdef CONFIG_USBDEV_TRACE_STRINGS
+struct trace_msg_t
+{
+  int id;
+  const char *str;
+};
+
+#define TRACE_STR(id) {id, #id}
+#define TRACE_STR_END {0, NULL}
+
+/* Declarations for the arrays. They are actually defined in device drivers. */
+
+const struct trace_msg_t g_usb_trace_strings_deverror[];
+const struct trace_msg_t g_usb_trace_strings_intdecode[];
+
+#endif
+
 /* USB Serial driver class events *******************************************/
 /* Used by both the CDC/ACM and the PL2303 serial class drivers */
 /* UART interface API calls */
