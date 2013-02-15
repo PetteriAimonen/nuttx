@@ -2544,16 +2544,16 @@ static inline void stm32_epout(FAR struct stm32_usbdev_s *priv, uint8_t epno)
           /* Continue processing data from the EP0 OUT request queue */
 
           stm32_epout_complete(priv, privep);
-        }
+        
+          /* If we are not actively processing an OUT request, then we
+          * need to setup to receive the next control request.
+          */
 
-      /* If we are not actively processing an OUT request, then we
-       * need to setup to receive the next control request.
-       */
-
-      if (!privep->active)
-        {
-          stm32_ep0out_ctrlsetup(priv);
-          priv->ep0state = EP0STATE_IDLE;
+          if (!privep->active)
+            {
+              stm32_ep0out_ctrlsetup(priv);
+              priv->ep0state = EP0STATE_IDLE;
+            }
         }
     }
 
@@ -2711,16 +2711,16 @@ static inline void stm32_epin(FAR struct stm32_usbdev_s *priv, uint8_t epno)
           /* Continue processing data from the EP0 OUT request queue */
 
           stm32_epin_request(priv, privep);
-        }
+        
+          /* If we are not actively processing an OUT request, then we
+          * need to setup to receive the next control request.
+          */
 
-      /* If we are not actively processing an OUT request, then we
-       * need to setup to receive the next control request.
-       */
-
-      if (!privep->active)
-        {
-          stm32_ep0out_ctrlsetup(priv);
-          priv->ep0state = EP0STATE_IDLE;
+          if (!privep->active)
+            {
+              stm32_ep0out_ctrlsetup(priv);
+              priv->ep0state = EP0STATE_IDLE;
+            }
         }
 
       /* Test mode is another special case */
