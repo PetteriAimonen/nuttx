@@ -188,8 +188,8 @@ struct trace_msg_t
 
 /* Declarations for the arrays. They are actually defined in device drivers. */
 
-const struct trace_msg_t g_usb_trace_strings_deverror[];
-const struct trace_msg_t g_usb_trace_strings_intdecode[];
+extern const struct trace_msg_t g_usb_trace_strings_deverror[];
+extern const struct trace_msg_t g_usb_trace_strings_intdecode[];
 
 #endif
 
