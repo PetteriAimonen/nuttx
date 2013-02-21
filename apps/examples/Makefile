@@ -41,7 +41,7 @@ SUBDIRS  = adc buttons can cdcacm composite cxxtest dhcpd discover elf ftpc
 SUBDIRS += ftpd hello helloxx hidkbd igmp json keypadtest lcdrw mm modbus mount
 SUBDIRS += nettest nsh null nx nxconsole nxffs nxflat nxhello nximage
 SUBDIRS += nxlines nxtext ostest  pashello pipe poll pwm posix_spawn qencoder
-SUBDIRS += relays rgmp romfs serloop telnetd thttpd tiff touchscreen udp uip
+SUBDIRS += relays rgmp romfs screenshot serloop telnetd thttpd tiff touchscreen udp uip
 SUBDIRS += usbserial sendmail usbstorage usbterm watchdog wget wgetjson
 
 # Sub-directories that might need context setup.  Directories may need
@@ -58,8 +58,8 @@ CNTXTDIRS = pwm
 
 ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 CNTXTDIRS += adc can cdcacm composite cxxtest dhcpd discover ftpd hello json
-CNTXTDIRS += keypadtestmodbus nettest nxlines relays qencoder telnetd watchdog
-CNTXTDIRS += wgetjson
+CNTXTDIRS += keypadtestmodbus nettest nxlines relays qencoder screenshot telnetd
+CNTXTDIRS += watchdog wgetjson
 endif
 
 ifeq ($(CONFIG_EXAMPLES_HELLOXX_BUILTIN),y)
