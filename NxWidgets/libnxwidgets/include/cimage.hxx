@@ -208,6 +208,11 @@ namespace NXWidgets
     inline FAR IBitmap *getBitmap() const { return m_bitmap; }
 
     /**
+     * Set the bitmap that this image contains.
+     */
+    inline void setBitmap(FAR IBitmap *bitmap) { m_bitmap = bitmap; }
+    
+    /**
      * Insert the dimensions that this widget wants to have into the rect
      * passed in as a parameter.  All coordinates are relative to the
      * widget's parent.

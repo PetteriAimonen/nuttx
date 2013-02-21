@@ -163,6 +163,12 @@ void CImage::getPreferredDimensions(CRect &rect) const
 
 void CImage::drawContents(CGraphicsPort *port)
 {
+  if (!m_bitmap)
+    {
+      // No image to draw
+      return;
+    }
+  
   // Get the the drawable region
 
   CRect rect;
