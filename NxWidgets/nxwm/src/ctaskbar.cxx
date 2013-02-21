@@ -458,9 +458,18 @@ bool CTaskbar::startApplication(IApplication *app, bool minimized)
 
   // Create a CImage instance to manage the applications icon
 
+  int w = 1;
+  int h = 1;
+  
+  if (bitmap)
+    {
+      w = bitmap->getWidth();
+      h = bitmap->getHeight();
+    }
+  
   NXWidgets::CImage *image =
-    new NXWidgets::CImage(control, 0, 0, bitmap->getWidth(),
-                          bitmap->getHeight(), bitmap, 0);
+    new NXWidgets::CImage(control, 0, 0, w, h, bitmap, 0);
+    
   if (!image)
     {
       return false;
