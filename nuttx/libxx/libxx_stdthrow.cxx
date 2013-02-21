@@ -71,4 +71,10 @@ namespace std
     dbg("C++: Bad allocation\n");
     abort();
   }
+  
+  void __throw_bad_function_call()
+  {
+    dbg("C++: Bad function call\n");
+    abort();
+  }
 }
