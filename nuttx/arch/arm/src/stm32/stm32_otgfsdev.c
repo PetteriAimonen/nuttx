@@ -2588,6 +2588,38 @@ static inline void stm32_epout_interrupt(FAR struct stm32_usbdev_s *priv)
   regval &= stm32_getreg(STM32_OTGFS_DAINTMSK);
   daint   = (regval & OTGFS_DAINT_OEP_MASK) >> OTGFS_DAINT_OEP_SHIFT;
 
+  if (daint == 0)
+    {
+      /* We got an interrupt, but there is no unmasked endpoint that caused it ?!
+       * When this happens, the interrupt flag never gets cleared and we are stuck
+       * in infinite interrupt loop.
+       * 
+       * This shouldn't happen if we are diligent about handling timing issues when
+       * masking endpoint interrupts. However, this workaround avoids infinite loop
+       * and allows operation to continue normally. It works by clearing each endpoint
+       * flags, masked or not.
+       */
+      regval  = stm32_getreg(STM32_OTGFS_DAINT);
+      daint   = (regval & OTGFS_DAINT_OEP_MASK) >> OTGFS_DAINT_OEP_SHIFT;
+      ulldbg("Unexpected interrupt, DAINT=%08x\n", regval);
+      
+      epno = 0;
+      while (daint)
+        {
+          if ((daint & 1) != 0)
+            {
+              regval = stm32_getreg(STM32_OTGFS_DOEPINT(epno));
+              ulldbg("DOEPINT(%d) = %08x\n", epno, regval);
+              stm32_putreg(0xFF, STM32_OTGFS_DOEPINT(epno));
+            }
+          
+          epno++;
+          daint >>= 1;
+        }
+      
+      return;
+    }
+  
   /* Process each pending IN endpoint interrupt */
 
   epno = 0;
@@ -2784,6 +2816,37 @@ static inline void stm32_epin_interrupt(FAR struct stm32_usbdev_s *priv)
   daint &= stm32_getreg(STM32_OTGFS_DAINTMSK);
   daint &= OTGFS_DAINT_IEP_MASK;
 
+  if (daint == 0)
+    {
+      /* We got an interrupt, but there is no unmasked endpoint that caused it ?!
+       * When this happens, the interrupt flag never gets cleared and we are stuck
+       * in infinite interrupt loop.
+       * 
+       * This shouldn't happen if we are diligent about handling timing issues when
+       * masking endpoint interrupts. However, this workaround avoids infinite loop
+       * and allows operation to continue normally. It works by clearing each endpoint
+       * flags, masked or not.
+       */
+      daint  = stm32_getreg(STM32_OTGFS_DAINT);
+      ulldbg("Unexpected interrupt, DAINT=%08x\n", daint);
+      daint &= OTGFS_DAINT_IEP_MASK;
+      
+      epno = 0;
+      while (daint)
+        {
+          if ((daint & 1) != 0)
+            {
+              ulldbg("DIEPINT(%d) = %08x\n", epno, stm32_getreg(STM32_OTGFS_DIEPINT(epno)));
+              stm32_putreg(0xFF, STM32_OTGFS_DIEPINT(epno));
+            }
+          
+          epno++;
+          daint >>= 1;
+        }
+      
+      return;
+    }
+  
   /* Process each pending IN endpoint interrupt */
 
   epno = 0;
