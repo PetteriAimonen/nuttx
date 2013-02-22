@@ -1049,8 +1049,10 @@ static void spi_setbits(FAR struct spi_dev_s *dev, int nbits)
           return;
         }
 
+        spi_modifycr1(priv, 0, SPI_CR1_SPE);
         spi_modifycr1(priv, setbits, clrbits);
-
+        spi_modifycr1(priv, SPI_CR1_SPE, 0);
+      
         /* Save the selection so the subsequence re-configurations will be faster */
 
 #ifndef CONFIG_SPI_OWNBUS
@@ -1085,7 +1087,10 @@ static uint16_t spi_send(FAR struct spi_dev_s *dev, uint16_t wd)
   spi_writeword(priv, wd);
   ret = spi_readword(priv);
 
-  spivdbg("Sent: %04x Return: %04x\n", wd, ret);
+  // Check any error flags (and clear them)
+  uint32_t regval = spi_getreg(priv, STM32_SPI_SR_OFFSET);
+  
+  spivdbg("Sent: %04x Return: %04x Status: %02x\n", wd, ret, regval);
   return ret;
 }
 
