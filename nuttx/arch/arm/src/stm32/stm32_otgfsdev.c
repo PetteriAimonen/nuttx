@@ -4030,6 +4030,8 @@ static void stm32_epout_disable(FAR struct stm32_ep_s *privep)
   /* REVISIT: */
   up_mdelay(50);
 #endif
+  
+  stm32_putreg(OTGFS_DOEPINT_EPDISD, STM32_OTGFS_DOEPINT(privep->epphy));
 
   /* Then disble the Global OUT NAK mode to continue receiving data
    * from other non-disabled OUT endpoints.
@@ -4114,7 +4116,8 @@ static void stm32_epin_disable(FAR struct stm32_ep_s *privep)
 
   regaddr = STM32_OTGFS_DIEPINT(privep->epphy);
   while ((stm32_getreg(regaddr) & OTGFS_DIEPINT_EPDISD) == 0);
-
+  stm32_putreg(OTGFS_DIEPINT_EPDISD, stm32_getreg(regaddr));
+  
   /* Flush any data remaining in the TxFIFO */
 
   stm32_txfifo_flush(OTGFS_GRSTCTL_TXFNUM_D(privep->epphy));
