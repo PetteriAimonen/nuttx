@@ -4079,6 +4079,10 @@ static void stm32_epin_disable(FAR struct stm32_ep_s *privep)
       return;
     }
 
+    
+  /* This INEPNE wait logic is suggested by reference manual, but seems
+   * to get stuck to infinite loop. */
+#if 0
   /* Make sure that there is no pending IPEPNE interrupt (because we are
    * to poll this bit below).
    */
@@ -4099,7 +4103,9 @@ static void stm32_epin_disable(FAR struct stm32_ep_s *privep)
   while ((stm32_getreg(regaddr) & OTGFS_DIEPINT_INEPNE) == 0);
   stm32_putreg(OTGFS_DIEPINT_INEPNE, regaddr);
 
-  /* Deactivate and disable the endpoint by setting the EPIS and SNAK bits
+#endif
+  
+  /* Deactivate and disable the endpoint by setting the EPDIS and SNAK bits
    * the DIEPCTLx register.
    */
 
