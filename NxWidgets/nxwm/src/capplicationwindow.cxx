@@ -54,6 +54,18 @@
  * Pre-Processor Definitions
  ********************************************************************************************/
 
+#ifdef CONFIG_NXWM_STOP_BITMAP
+extern const struct NXWidgets::SRlePaletteBitmap CONFIG_NXWM_STOP_BITMAP;
+#else
+#define CONFIG_NXWM_STOP_BITMAP g_stopBitmap
+#endif
+
+#ifdef CONFIG_NXWM_MINIMIZE_BITMAP
+extern const struct NXWidgets::SRlePaletteBitmap CONFIG_NXWM_MINIMIZE_BITMAP;
+#else
+#define CONFIG_NXWM_MINIMIZE_BITMAP g_minimizeBitmap
+#endif
+
 /********************************************************************************************
  * CApplicationWindow Method Implementations
  ********************************************************************************************/
@@ -192,7 +204,7 @@ bool CApplicationWindow::open(void)
     {
       // Create STOP bitmap container
 
-      m_stopBitmap = new NXWidgets::CRlePaletteBitmap(&g_stopBitmap);
+      m_stopBitmap = new NXWidgets::CRlePaletteBitmap(&CONFIG_NXWM_STOP_BITMAP);
       if (!m_stopBitmap)
         {
           return false;
@@ -244,7 +256,7 @@ bool CApplicationWindow::open(void)
 #ifndef CONFIG_NXWM_DISABLE_MINIMIZE
   // Create MINIMIZE application bitmap container
 
-  m_minimizeBitmap = new NXWidgets::CRlePaletteBitmap(&g_minimizeBitmap);
+  m_minimizeBitmap = new NXWidgets::CRlePaletteBitmap(&CONFIG_NXWM_MINIMIZE_BITMAP);
   if (!m_minimizeBitmap)
     {
       return false;
