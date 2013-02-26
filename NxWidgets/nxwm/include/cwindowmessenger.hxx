@@ -43,7 +43,7 @@
 #include <nuttx/config.h>
 
 #include <sys/types.h>
-#include <mqueue.h>
+#include <nuttx/wqueue.h>
 
 #include <nuttx/nx/nxtk.h>
 #include <nuttx/nx/nxconsole.h>
@@ -83,9 +83,18 @@ namespace NxWM
                            public NXWidgets::CWidgetControl
   {
   private:
-    mqd_t m_mqd; /**< Message queue descriptor used to commincate with the
-                  **  start window thread. */
- 
+    /** Structure that stores data for the work queue callback. */
+    struct work_state_t
+      {
+        work_s work;
+        CWindowMessenger *windowMessenger;
+        void *instance;
+      };
+
+    static void inputWorkCallback(FAR void *arg);
+    
+    static void destroyWorkCallback(FAR void *arg);
+    
     /**
      * Handle an NX window mouse input event.
      *

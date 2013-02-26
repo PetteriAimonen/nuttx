@@ -89,10 +89,6 @@ CStartWindow::CStartWindow(CTaskbar *taskbar, CApplicationWindow *window)
   m_taskbar = taskbar;
   m_window  = window;
 
-  // The start window task is not running
-
-  m_taskId  = -1;
-
   // Add our personalized window label
 
   NXWidgets::CNxString myName = getName();
@@ -169,24 +165,7 @@ NXWidgets::CNxString CStartWindow::getName(void)
 
 bool CStartWindow::run(void)
 {
-  // Some sanity checking
-
-  if (m_taskId >= 0)
-    {
-      // The start window task is already running???
-
-      return false;
-    }
-
-  // Start the start window task
-
-  m_taskId = TASK_CREATE("StartWindow", CONFIG_NXWM_STARTWINDOW_PRIO,
-                         CONFIG_NXWM_STARTWINDOW_STACKSIZE, startWindow,
-                        (FAR const char **)0);
-
-  // Did we successfully start the NxConsole task?
-
-  return m_taskId >= 0;
+  return true;
 }
 
 /**
@@ -195,20 +174,6 @@ bool CStartWindow::run(void)
 
 void CStartWindow::stop(void)
 {
-  // Delete the start window task --- what are we doing?  This should never
-  // happen because the start window task is persistent!
-
-  if (m_taskId >= 0)
-    {
-      // Call task_delete(), possibly stranding resources
- 
-      pid_t pid = m_taskId;
-      m_taskId = -1;
-
-      // Then delete the NSH task
-
-      task_delete(pid);
-    }
 }
 /**
  * Destroy the application and free all of its resources.  This method
@@ -592,111 +557,6 @@ void CStartWindow::handleActionEvent(const NXWidgets::CWidgetEventArgs &e)
                   app->destroy();
                 }
             }
-        }
-    }
-}
-
-/**
- * This is the start window task.  This function receives window events from
- * the NX listener threads indirectly through this sequence:
- *
- * 1. NX listener thread receives a windows event.  This may be a
- *    positional change notification, a redraw request, or mouse or
- *    keyboard input.
- * 2. The NX listener thread performs the callback by calling a
- *    NXWidgets::CCallback method associated with the window.
- * 3. NXWidgets::CCallback calls into NXWidgets::CWidgetControl to process
- *    the event.
- * 4. NXWidgets::CWidgetControl records the new state data and raises a
- *    window event.
- * 5. NXWidgets::CWindowEventHandlerList will give the event to
- *    NxWM::CWindowMessenger.
- * 6. NxWM::CWindowMessenger will send the a message on a well-known message
- *    queue.
- * 7. This CStartWindow::startWindow task will receive and process that
- *    message.
- */
-
-int CStartWindow::startWindow(int argc, char *argv[])
-{
-  /* Open a well-known message queue for reading */
-
-  struct mq_attr attr;
-  attr.mq_maxmsg  = CONFIG_NXWM_STARTWINDOW_MXMSGS;
-  attr.mq_msgsize = sizeof(struct SStartWindowMessage);
-  attr.mq_flags   = 0;
-
-  mqd_t mqd = mq_open(g_startWindowMqName, O_RDONLY|O_CREAT, 0666, &attr);
-  if (mqd == (mqd_t)-1)
-    {
-      gdbg("ERROR: mq_open(%s) failed: %d\n", g_startWindowMqName, errno);
-      return EXIT_FAILURE;
-    }
-
-  // Now loop forever, receiving and processing messages.  Ultimately, all
-  // widget driven events (button presses, etc.) are driven by this logic
-  // on this thread.
-
-  for (;;)
-    {
-      // Receive the next message
-
-      struct SStartWindowMessage msg;
-      ssize_t nbytes = mq_receive(mqd, &msg,  sizeof(struct SStartWindowMessage), 0);
-      if (nbytes < 0)
-        {
-          int errval = errno;
-
-          // EINTR is not an error.  The wait was interrupted by a signal and
-          // we just need to try reading again.
-
-          if (errval != EINTR)
-            {
-              gdbg("ERROR: mq_receive failed: %d\n", errval);
-            }
-          else
-            {
-              gdbg("mq_receive interrupted by signal\n");
-            }
-          
-          continue;
-        }
-
-      gvdbg("Received msgid=%d nbytes=%d\n", msg.msgId, nbytes);
-      DEBUGASSERT(nbytes = sizeof(struct SStartWindowMessage) && msg.instance);
-
-      // Dispatch the message to the appropriate CWidgetControl and to the
-      // appropriate CWidgetControl method
-
-      switch (msg.msgId)
-        {
-          break;
-
-        case MSGID_MOUSE_INPUT:       // New mouse input is available
-        case MSGID_KEYBOARD_INPUT:    // New keyboard input is available
-          {
-            // Handle all new window input events by calling the CWidgetControl::pollEvents() method
-
-            NXWidgets::CWidgetControl *control = (NXWidgets::CWidgetControl *)msg.instance;
-            control->pollEvents();
-          }
-          break;
-
-        case MSGID_DESTROY_APP:       // Destroy the application
-          {
-            // Handle all destroy application events
-
-            gdbg("Deleting app=%p\n", msg.instance);
-            IApplication *app = (IApplication *)msg.instance;
-            delete app;
-          }
-          break;
-
-        case MSGID_POSITIONAL_CHANGE: // Change in window positional data (not used)
-        case MSGID_REDRAW_REQUEST:    // Request to redraw a portion of the window (not used)
-        default:
-          gdbg("ERROR: Unrecognized or unsupported msgId: %d\n", (int)msg.msgId);
-          break;
         }
     }
 }
