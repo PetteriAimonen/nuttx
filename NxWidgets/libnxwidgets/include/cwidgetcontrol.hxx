@@ -44,6 +44,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <semaphore.h>
 #include <time.h>
 
@@ -203,6 +204,7 @@ namespace NXWidgets
     struct nxgl_rect_s          m_bounds;         /**< Size of the display */
 #ifdef CONFIG_NX_MULTIUSER
     sem_t                       m_geoSem;         /**< Posted when geometry is valid */
+    sem_t                       m_boundsSem;      /**< Posted when bounds are valid */
 #endif
     CWindowEventHandlerList     m_eventHandlers;  /**< List of event handlers. */
 
@@ -322,6 +324,34 @@ namespace NXWidgets
     {
       takeGeoSem();
       giveGeoSem();
+    }
+    
+#ifdef CONFIG_NX_MULTIUSER
+    void takeBoundsSem(void);
+#else
+    inline void takeBoundsSem(void) {}
+#endif
+
+    /**
+     * Give the geometry semaphore
+     */
+
+    inline void giveBoundsSem(void)
+    {
+#ifdef CONFIG_NX_MULTIUSER
+      sem_post(&m_boundsSem);
+#endif
+    }
+
+    
+    /**
+     * Wait for bounds data
+     */
+    
+    inline void waitBoundsData(void)
+    {
+      takeBoundsSem();
+      giveBoundsSem();
     }
 
     /**
@@ -647,13 +677,13 @@ namespace NXWidgets
 
     inline CRect getWindowBoundingBox(void)
     {
-      waitGeoData();
+      waitBoundsData();
       return CRect(&m_bounds);
     }
 
     inline void getWindowBoundingBox(FAR struct nxgl_rect_s *bounds)
     {
-      waitGeoData();
+      waitBoundsData();
       nxgl_rectcopy(bounds, &m_bounds);
     }
 

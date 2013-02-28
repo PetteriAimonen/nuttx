@@ -117,6 +117,7 @@ CWidgetControl::CWidgetControl(FAR const CWidgetStyle *style)
   sem_init(&m_waitSem, 0, 0);
 #endif
 #ifdef CONFIG_NX_MULTIUSER
+  sem_init(&m_boundsSem, 0, 0);
   sem_init(&m_geoSem, 0, 0);
 #endif
 
@@ -397,15 +398,16 @@ void CWidgetControl::geometryEvent(NXHANDLE hWindow,
  
       m_hWindow = hWindow;
       nxgl_rectcopy(&m_bounds, bounds);
+      giveBoundsSem();
     }
 
   // In the normal start up sequence, the window is created with zero size
   // at position 0,0.  The safe thing to do is to set the position (still
   // with size 0, then then set the size.  Assuming that is what is being
   // done, we will not report that we have valid geometry until the size
-  // becomes nonzero.
+  // becomes nonzero (or actually over 1).
 
-  if (!m_haveGeometry && size->h > 0 && size->w > 0)
+  if (!m_haveGeometry && size->h > 1 && size->w > 1)
     {
       // Wake up any threads waiting for initial position information.
       // REVISIT:  If the window is moved or repositioned, then the
@@ -911,6 +913,25 @@ void CWidgetControl::takeGeoSem(void)
   do
     {
       ret = sem_wait(&m_geoSem);
+    }
+  while (ret < 0 && errno == EINTR);
+}
+#endif
+
+/**
+ * Take the bounds semaphore (handling signal interruptions)
+ */
+
+#ifdef CONFIG_NX_MULTIUSER
+void CWidgetControl::takeBoundsSem(void)
+{
+  // Take the geometry semaphore.  Retry is an error occurs (only if
+  // the error is due to a signal interruption).
+
+  int ret;
+  do
+    {
+      ret = sem_wait(&m_boundsSem);
     }
   while (ret < 0 && errno == EINTR);
 }
