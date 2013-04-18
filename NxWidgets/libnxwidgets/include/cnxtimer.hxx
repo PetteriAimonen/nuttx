@@ -171,6 +171,12 @@ namespace NXWidgets
     void stop(void);
 
     /**
+     * Returns true if the timer is currently running.
+     */
+    
+    inline bool isRunning() const { return m_isRunning; }
+    
+    /**
      * Set the timeout of this timer.  This timeout value will not
      * take effect until start() or reset() is called.
      *
