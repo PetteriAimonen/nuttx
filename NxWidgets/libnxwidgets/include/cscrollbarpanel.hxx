@@ -105,7 +105,7 @@ namespace NXWidgets
   /**
    * Class containing a scrolling panel bordered by scrollbars.
    */
-  class CScollbarPanel : public CNxWidget, public IScrollable,
+  class CScrollbarPanel : public CNxWidget, public IScrollable,
                          public CWidgetEventHandler
   {
   protected:
@@ -143,13 +143,13 @@ namespace NXWidgets
      * Destructor.
      */
 
-    virtual ~CScollbarPanel(void) { }
+    virtual ~CScrollbarPanel(void) { }
 
     /**
      * Copy constructor is protected to prevent usage.
      */
 
-    inline CScollbarPanel(const CScollbarPanel &scrollbarPanel)
+    inline CScrollbarPanel(const CScrollbarPanel &scrollbarPanel)
     : CNxWidget(scrollbarPanel) { }
 
   public:
@@ -169,7 +169,7 @@ namespace NXWidgets
      *   the style into its own internal style object.
      */
 
-    CScollbarPanel(CWidgetControl *pWidgetControl,
+    CScrollbarPanel(CWidgetControl *pWidgetControl,
                    nxgl_coord_t x, nxgl_coord_t y,
                    nxgl_coord_t width, nxgl_coord_t height,
                    uint32_t flags,
