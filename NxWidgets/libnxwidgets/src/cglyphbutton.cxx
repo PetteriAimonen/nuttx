@@ -193,16 +193,16 @@ void CGlyphButton::drawContents(CGraphicsPort *port)
 
   if (isEnabled())
     {
-      port->drawBitmap(rect.getX(), rect.getY(),
-                       rect.getWidth(), rect.getHeight(),
-                       bitmap, m_bitmapX, m_bitmapY,
+      port->drawBitmap(rect.getX() + m_bitmapX, rect.getY() + m_bitmapY,
+                       bitmap->width, bitmap->height,
+                       bitmap, 0, 0,
                        CONFIG_NXWIDGETS_TRANSPARENT_COLOR);
     }
   else
     {
-      port->drawBitmapGreyScale(rect.getX(), rect.getY(),
-                                rect.getWidth(), rect.getHeight(),
-                                bitmap, m_bitmapX, m_bitmapY);
+      port->drawBitmapGreyScale(rect.getX() + m_bitmapX, rect.getY() + m_bitmapY,
+                                bitmap->width, bitmap->height,
+                                bitmap, 0, 0);
     }
 }
 
