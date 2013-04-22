@@ -156,7 +156,16 @@ namespace NXWidgets
     virtual void onClick(nxgl_coord_t x, nxgl_coord_t y);
 
     /**
-     * Raises an action event and redraws the button.
+     * Raises an action event.
+     *
+     * @param x The x coordinate of the mouse.
+     * @param y The y coordinate of the mouse.
+     */
+
+    virtual void onPreRelease(nxgl_coord_t x, nxgl_coord_t y);
+    
+    /**
+     * Raises a release event and redraws the button.
      *
      * @param x The x coordinate of the mouse.
      * @param y The y coordinate of the mouse.
