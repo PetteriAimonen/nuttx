@@ -265,6 +265,21 @@ EXTERN void stm32_dmastop(DMA_HANDLE handle);
 EXTERN size_t stm32_dmaresidual(DMA_HANDLE handle);
 
 /****************************************************************************
+ * Name: stm32_dmacapable
+ *
+ * Description:
+ *   Check if the DMA controller can transfer data to/from given memory
+ *   address. This depends on the internal connections in the ARM bus matrix
+ *   of the processor. Note that this only applies to memory addresses, it
+ *   will return false for any peripheral address.
+ *
+ * Returned value:
+ *   True, if transfer is possible.
+ * 
+ ****************************************************************************/
+EXTERN bool stm32_dmacapable(uint32_t maddr);
+
+/****************************************************************************
  * Name: stm32_dmasample
  *
  * Description:

@@ -842,6 +842,38 @@ size_t stm32_dmaresidual(DMA_HANDLE handle)
 }
 
 /****************************************************************************
+ * Name: stm32_dmacapable
+ *
+ * Description:
+ *   Check if the DMA controller can transfer data to/from given memory
+ *   address. This depends on the internal connections in the ARM bus matrix
+ *   of the processor. Note that this only applies to memory addresses, it
+ *   will return false for any peripheral address.
+ *
+ * Returned value:
+ *   True, if transfer is possible.
+ *
+ ****************************************************************************/
+bool stm32_dmacapable(uint32_t maddr)
+{
+  switch (maddr & STM32_REGION_MASK)
+    {
+      case STM32_FSMC_BANK1:
+      case STM32_FSMC_BANK2:
+      case STM32_FSMC_BANK3:
+      case STM32_FSMC_BANK4:
+      case STM32_SRAM_BASE:
+      case STM32_CODE_BASE:
+        /* All RAM and flash is supported */
+        return true;
+      
+      default:
+        /* Everything else is unsupported by DMA */
+        return false;
+    }
+}
+
+/****************************************************************************
  * Name: stm32_dmasample
  *
  * Description:
