@@ -1117,6 +1117,10 @@ static uint16_t spi_send(FAR struct spi_dev_s *dev, uint16_t wd)
 #ifndef CONFIG_STM32_SPI_DMA
 static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
                          FAR void *rxbuffer, size_t nwords)
+#else
+static void spi_exchange_nodma(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
+                         FAR void *rxbuffer, size_t nwords)
+#endif
 {
   FAR struct stm32_spidev_s *priv = (FAR struct stm32_spidev_s *)dev;
   DEBUGASSERT(priv && priv->spibase);
@@ -1192,7 +1196,6 @@ static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
         }
     }
 }
-#endif
 
 /*************************************************************************
  * Name: spi_exchange (with DMA capability)
@@ -1218,27 +1221,36 @@ static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
 static void spi_exchange(FAR struct spi_dev_s *dev, FAR const void *txbuffer,
                          FAR void *rxbuffer, size_t nwords)
 {
-  FAR struct stm32_spidev_s *priv = (FAR struct stm32_spidev_s *)dev;
-  static uint16_t rxdummy = 0xffff;
-  static const uint16_t txdummy = 0xffff;
+  if ((txbuffer && !stm32_dmacapable((uint32_t)txbuffer)) ||
+      (rxbuffer && !stm32_dmacapable((uint32_t)rxbuffer)))
+    {
+      /* Unsupported memory region, fall back to non-DMA method. */
+      spi_exchange_nodma(dev, txbuffer, rxbuffer, nwords);
+    }
+  else
+    {
+      FAR struct stm32_spidev_s *priv = (FAR struct stm32_spidev_s *)dev;
+      static uint16_t rxdummy = 0xffff;
+      static const uint16_t txdummy = 0xffff;
 
-  spivdbg("txbuffer=%p rxbuffer=%p nwords=%d\n", txbuffer, rxbuffer, nwords);
-  DEBUGASSERT(priv && priv->spibase);
+      spivdbg("txbuffer=%p rxbuffer=%p nwords=%d\n", txbuffer, rxbuffer, nwords);
+      DEBUGASSERT(priv && priv->spibase);
 
-  /* Setup DMAs */
+      /* Setup DMAs */
 
-  spi_dmarxsetup(priv, rxbuffer, &rxdummy, nwords);
-  spi_dmatxsetup(priv, txbuffer, &txdummy, nwords);
+      spi_dmarxsetup(priv, rxbuffer, &rxdummy, nwords);
+      spi_dmatxsetup(priv, txbuffer, &txdummy, nwords);
 
-  /* Start the DMAs */
+      /* Start the DMAs */
 
-  spi_dmarxstart(priv);
-  spi_dmatxstart(priv);
+      spi_dmarxstart(priv);
+      spi_dmatxstart(priv);
 
-  /* Then wait for each to complete */
+      /* Then wait for each to complete */
 
-  spi_dmarxwait(priv);
-  spi_dmatxwait(priv);
+      spi_dmarxwait(priv);
+      spi_dmatxwait(priv);
+    }
 }
 #endif
 
