@@ -411,6 +411,13 @@ namespace NxWM
     void getDisplaySize(FAR struct nxgl_size_s &size);
      
     /**
+     * Force a redraw of the taskbar and current application.
+     * This should only be necessary if the display loses state due to e.g. powerdown
+     * or other manual intervention.
+     */
+    void redraw() { redrawTopApplication(); }
+    
+    /**
      * Simulate a mouse click or release on the icon at index.  This method
      * is only available during automated testing of NxWM.
      *
